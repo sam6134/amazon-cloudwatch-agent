@@ -302,6 +302,9 @@ cwa_config() {
           #       default:    delete non .tmp file, rename .tmp file
           #       append:     rename .tmp file
           #       remove:     no-op
+          echo "Before iterating"
+          ls -ltr "${JSON_DIR}"
+          echo "Start iterating"
           if [ "${multi_config}" = 'default' ]; then
                rm -f "${JSON}"
                for file in "${JSON_DIR}"/*; do
@@ -309,7 +312,7 @@ cwa_config() {
                     if [ "${file}" = "${base}" ]; then
                          rm -f "${file}"
                     else
-                         mv -f "${file}" "${base}"
+                         ls -ltr "${JSON_DIR}" && mv -f "${file}" "${base}"
                     fi
                done
           elif [ "${multi_config}" = 'append' ]; then
