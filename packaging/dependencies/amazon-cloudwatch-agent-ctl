@@ -302,14 +302,22 @@ cwa_config() {
           #       default:    delete non .tmp file, rename .tmp file
           #       append:     rename .tmp file
           #       remove:     no-op
+          echo "Before iterating"
+          ls -ltr "${JSON_DIR}"
+          echo "Start iterating"
           if [ "${multi_config}" = 'default' ]; then
                rm -f "${JSON}"
                for file in "${JSON_DIR}"/*; do
                     base="${JSON_DIR}/$(basename "${file}" .tmp)"
                     if [ "${file}" = "${base}" ]; then
                          rm -f "${file}"
+                    elif [ -f "${file}" ]; then
+                         echo "${file} exists. Now moving it"
+                         ls -ltr "${JSON_DIR}" && mv -f "${file}" "${base}"
                     else
-                         mv -f "${file}" "${base}"
+                         echo "${file} does not exist. Printing contents and erroring out"
+                         ls -ltr "${JSON_DIR}"
+                         exit 1
                     fi
                done
           elif [ "${multi_config}" = 'append' ]; then
