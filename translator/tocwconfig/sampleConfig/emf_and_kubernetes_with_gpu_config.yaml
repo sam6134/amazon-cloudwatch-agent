@@ -1,5 +1,39 @@
 connectors: {}
 exporters:
+    awscloudwatchlogs/emf_logs:
+        certificate_file_path: ""
+        emf_only: true
+        endpoint: https://fake_endpoint
+        imds_retries: 2
+        local_mode: false
+        log_group_name: emf/logs/default
+        log_retention: 0
+        log_stream_name: host_name_from_env
+        max_retries: 2
+        middleware: agenthealth/logs
+        no_verify_ssl: false
+        num_workers: 8
+        profile: default
+        proxy_address: ""
+        raw_log: true
+        region: us-east-1
+        request_timeout_seconds: 30
+        resource_arn: ""
+        retry_on_failure:
+            enabled: true
+            initial_interval: 5s
+            max_elapsed_time: 5m0s
+            max_interval: 30s
+            multiplier: 1.5
+            randomization_factor: 0.5
+        role_arn: ""
+        sending_queue:
+            enabled: true
+            num_consumers: 1
+            queue_size: 1000
+            storage: null
+        shared_credentials_file:
+            - /root/.aws/credentials
     awsemf/containerinsights:
         certificate_file_path: ""
         detailed_metrics: false
@@ -8,7 +42,7 @@ exporters:
         eks_fargate_container_insights_enabled: false
         endpoint: https://fake_endpoint
         enhanced_container_insights: true
-        imds_retries: 1
+        imds_retries: 2
         local_mode: false
         log_group_name: /aws/containerinsights/{ClusterName}/performance
         log_retention: 0
@@ -293,6 +327,58 @@ exporters:
               label_matchers: []
               metric_name_selectors:
                 - apiserver_flowcontrol_request_concurrency_limit
+            - dimensions:
+                - - ClusterName
+                  - FullPodName
+                  - Namespace
+                  - PodName
+                  - UUID
+                - - ClusterName
+                  - Namespace
+                  - PodName
+                  - UUID
+                - - ClusterName
+                  - Namespace
+                  - Service
+                - - ClusterName
+              label_matchers: []
+              metric_name_selectors:
+                - pod_gpu_utilization
+                - pod_gpu_utilization_memory
+                - pod_gpu_memory_total
+                - pod_gpu_memory_used
+                - pod_gpu_power_draw
+                - pod_gpu_temperature
+            - dimensions:
+                - - ClusterName
+                  - InstanceId
+                  - NodeName
+                  - UUID
+                - - ClusterName
+                  - InstanceId
+                  - NodeName
+                - - ClusterName
+              label_matchers: []
+              metric_name_selectors:
+                - node_gpu_utilization
+                - node_gpu_utilization_memory
+                - node_gpu_memory_total
+                - node_gpu_memory_used
+                - node_gpu_power_draw
+                - node_gpu_temperature
+            - dimensions:
+                - - ClusterName
+                  - InstanceId
+                  - NodeName
+                - - ClusterName
+              label_matchers: []
+              metric_name_selectors:
+                - node_gpu_total
+            - dimensions:
+                - - ClusterName
+              label_matchers: []
+              metric_name_selectors:
+                - cluster_gpu_total
         metric_descriptors:
             - metric_name: apiserver_admission_controller_admission_duration_seconds
               overwrite: true
@@ -362,7 +448,7 @@ exporters:
         parse_json_encoded_attr_values:
             - Sources
             - kubernetes
-        profile: AmazonCloudWatchAgent
+        profile: default
         proxy_address: ""
         region: us-east-1
         request_timeout_seconds: 30
@@ -372,7 +458,7 @@ exporters:
         retain_initial_value_of_delta_metric: false
         role_arn: ""
         shared_credentials_file:
-            - fake-path
+            - /root/.aws/credentials
         version: "0"
 extensions:
     agenthealth/logs:
@@ -382,6 +468,12 @@ extensions:
                 - PutLogEvents
 processors:
     batch/containerinsights:
+        metadata_cardinality_limit: 1000
+        metadata_keys: []
+        send_batch_max_size: 0
+        send_batch_size: 8192
+        timeout: 5s
+    batch/emf_logs:
         metadata_cardinality_limit: 1000
         metadata_keys: []
         send_batch_max_size: 0
@@ -399,6 +491,115 @@ processors:
               new_name: apiserver_request_total_5xx
               operations: []
               submatch_case: ""
+            - action: insert
+              aggregation_type: ""
+              experimental_match_labels: { }
+              group_resource_labels: { }
+              include: DCGM_FI_DEV_GPU_UTIL
+              match_type: ""
+              new_name: pod_gpu_utilization
+              operations: [ ]
+              submatch_case: ""
+            - action: insert
+              aggregation_type: ""
+              experimental_match_labels: { }
+              group_resource_labels: { }
+              include: DCGM_FI_DEV_GPU_UTIL
+              match_type: ""
+              new_name: node_gpu_utilization
+              operations: [ ]
+              submatch_case: ""
+            - action: insert
+              aggregation_type: ""
+              experimental_match_labels: { }
+              group_resource_labels: { }
+              include: DCGM_FI_DEV_MEM_COPY_UTIL
+              match_type: ""
+              new_name: pod_gpu_utilization_memory
+              operations: [ ]
+              submatch_case: ""
+            - action: insert
+              aggregation_type: ""
+              experimental_match_labels: { }
+              group_resource_labels: { }
+              include: DCGM_FI_DEV_MEM_COPY_UTIL
+              match_type: ""
+              new_name: node_gpu_utilization_memory
+              operations: [ ]
+              submatch_case: ""
+            - action: insert
+              aggregation_type: ""
+              experimental_match_labels: { }
+              group_resource_labels: { }
+              include: DCGM_FI_DEV_FB_USED
+              match_type: ""
+              new_name: pod_gpu_memory_used
+              operations: [ ]
+              submatch_case: ""
+            - action: insert
+              aggregation_type: ""
+              experimental_match_labels: { }
+              group_resource_labels: { }
+              include: DCGM_FI_DEV_FB_USED
+              match_type: ""
+              new_name: node_gpu_memory_used
+              operations: [ ]
+              submatch_case: ""
+            - action: insert
+              aggregation_type: "sum"
+              experimental_match_labels: { }
+              group_resource_labels: { }
+              include: ^DCGM_FI_DEV_FB_(USED|FREE)$
+              match_type: "regexp"
+              new_name: pod_gpu_memory_total
+              operations: [ ]
+              submatch_case: ""
+            - action: insert
+              aggregation_type: "sum"
+              experimental_match_labels: { }
+              group_resource_labels: { }
+              include: ^DCGM_FI_DEV_FB_(USED|FREE)$
+              match_type: "regexp"
+              new_name: node_gpu_memory_total
+              operations: [ ]
+              submatch_case: ""
+            - action: insert
+              aggregation_type: ""
+              experimental_match_labels: { }
+              group_resource_labels: { }
+              include: DCGM_FI_DEV_GPU_TEMP
+              match_type: ""
+              new_name: pod_gpu_temperature
+              operations: [ ]
+              submatch_case: ""
+            - action: insert
+              aggregation_type: ""
+              experimental_match_labels: { }
+              group_resource_labels: { }
+              include: DCGM_FI_DEV_GPU_TEMP
+              match_type: ""
+              new_name: node_gpu_temperature
+              operations: [ ]
+              submatch_case: ""
+            - action: insert
+              aggregation_type: ""
+              experimental_match_labels: { }
+              group_resource_labels: { }
+              include: DCGM_FI_DEV_POWER_USAGE
+              match_type: ""
+              new_name: pod_gpu_power_draw
+              operations: [ ]
+              submatch_case: ""
+            - action: insert
+              aggregation_type: ""
+              experimental_match_labels: { }
+              group_resource_labels: { }
+              include: DCGM_FI_DEV_POWER_USAGE
+              match_type: ""
+              new_name: node_gpu_power_draw
+              operations: [ ]
+              submatch_case: ""
+
 receivers:
     awscontainerinsightreceiver:
         add_container_name_metric_label: true
@@ -410,27 +611,69 @@ receivers:
         container_orchestrator: eks
         enable_control_plane_metrics: true
         endpoint: ""
-        imds_retries: 1
+        imds_retries: 2
         leader_lock_name: cwagent-clusterleader
         leader_lock_using_config_map_only: true
-        local_mode: true
+        local_mode: false
         max_retries: 0
         no_verify_ssl: false
         num_workers: 0
         prefer_full_pod_name: true
-        profile: AmazonCloudWatchAgent
+        profile: default
         proxy_address: ""
         region: us-east-1
         request_timeout_seconds: 0
         resource_arn: ""
         role_arn: ""
         shared_credentials_file:
-            - fake-path
-        gpu_metrics: false
+            - /root/.aws/credentials
+        gpu_metrics: true
+    tcplog/emf_logs:
+        attributes: {}
+        encoding: utf-8
+        id: tcp_input
+        listen_address: 0.0.0.0:25888
+        operators: []
+        output: []
+        resource: {}
+        retry_on_failure:
+            enabled: false
+            initial_interval: 0s
+            max_elapsed_time: 0s
+            max_interval: 0s
+        storage: null
+        type: tcp_input
+    udplog/emf_logs:
+        attributes: {}
+        encoding: utf-8
+        id: udp_input
+        listen_address: 0.0.0.0:25888
+        multiline:
+            line_end_pattern: .^
+            line_start_pattern: ""
+            omit_pattern: false
+        operators: []
+        output: []
+        resource: {}
+        retry_on_failure:
+            enabled: false
+            initial_interval: 0s
+            max_elapsed_time: 0s
+            max_interval: 0s
+        storage: null
+        type: udp_input
 service:
     extensions:
         - agenthealth/logs
     pipelines:
+        logs/emf_logs:
+            exporters:
+                - awscloudwatchlogs/emf_logs
+            processors:
+                - batch/emf_logs
+            receivers:
+                - tcplog/emf_logs
+                - udplog/emf_logs
         metrics/containerinsights:
             exporters:
                 - awsemf/containerinsights
