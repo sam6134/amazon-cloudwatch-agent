@@ -605,7 +605,7 @@ jobs:
       - name: Login ECR
         id: login-ecr
         if: steps.ecs-ec2-integration-test.outputs.cache-hit != 'true'
-        uses: aws-actions/amazon-ecr-login@v1
+        uses: aws-actions/amazon-ecr-login@v2
 
       - name: Verify Terraform version
         if: steps.ecs-ec2-integration-test.outputs.cache-hit != 'true'
@@ -688,7 +688,7 @@ jobs:
       - name: Login ECR
         id: login-ecr
         if: steps.ecs-fargate-integration-test.outputs.cache-hit != 'true'
-        uses: aws-actions/amazon-ecr-login@v1
+        uses: aws-actions/amazon-ecr-login@v2
 
       - name: Verify Terraform version
         if: steps.ecs-fargate-integration-test.outputs.cache-hit != 'true'
@@ -766,7 +766,7 @@ jobs:
       - name: Login ECR
         id: login-ecr
         if: steps.eks-ec2-integration-test.outputs.cache-hit != 'true'
-        uses: aws-actions/amazon-ecr-login@v1
+        uses: aws-actions/amazon-ecr-login@v2
 
       - name: Verify Terraform version
         if: steps.eks-ec2-integration-test.outputs.cache-hit != 'true'
@@ -848,7 +848,7 @@ jobs:
       - name: Login ECR
         id: login-ecr
         if: steps.eks-ec2-integration-test.outputs.cache-hit != 'true'
-        uses: aws-actions/amazon-ecr-login@v1
+        uses: aws-actions/amazon-ecr-login@v2
 
       - name: Verify Terraform version
         if: steps.eks-ec2-integration-test.outputs.cache-hit != 'true'
