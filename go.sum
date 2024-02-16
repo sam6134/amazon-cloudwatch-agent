@@ -156,10 +156,8 @@ github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/xray
 github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/xray v0.0.0-20231221155153-92710a714293/go.mod h1:D6lmFdWbpYRttNnfkZJSs2ZZcAUGfe96/Vrm8tiK3Tw=
 github.com/amazon-contributing/opentelemetry-collector-contrib/override/aws v0.0.0-20231221155153-92710a714293 h1:tdKrquL4SXnudMwMcgUJWxTG/ZlxcuFIpGLzAdY2PTM=
 github.com/amazon-contributing/opentelemetry-collector-contrib/override/aws v0.0.0-20231221155153-92710a714293/go.mod h1:t/hYoRTnlPuRjh8y0BwVGgNvNIXpU2QJME5YVppUUHQ=
-github.com/amazon-contributing/opentelemetry-collector-contrib/pkg/stanza v0.0.0-20231208183748-c00ca1f62c3e h1:T9NVthu16Nd8FSuqPw2718jijASLLjo+m09Q2qeamoM=
-github.com/amazon-contributing/opentelemetry-collector-contrib/pkg/stanza v0.0.0-20231208183748-c00ca1f62c3e/go.mod h1:7uCHpcHoawJsqoyPLxaFROWsZXPSF6/op3Hmw4pV4WE=
-github.com/amazon-contributing/opentelemetry-collector-contrib/pkg/translator/prometheus v0.0.0-20231221155153-92710a714293 h1:P6oZ2M+MiL0ti5ORCaRxELtK2UxrVyO+PjdqbkqPq3M=
-github.com/amazon-contributing/opentelemetry-collector-contrib/pkg/translator/prometheus v0.0.0-20231221155153-92710a714293/go.mod h1:HXv8nyJ+RUHGLZMPbaPFnWKonYWNTJfZ9ZUudqtwudw=
+github.com/amazon-contributing/opentelemetry-collector-contrib/pkg/stanza v0.0.0-20231221155153-92710a714293 h1:3huVB7owCZn4ZqxbCwwOQZx3FASjSr04zEl2X3M/G6I=
+github.com/amazon-contributing/opentelemetry-collector-contrib/pkg/stanza v0.0.0-20231221155153-92710a714293/go.mod h1:7uCHpcHoawJsqoyPLxaFROWsZXPSF6/op3Hmw4pV4WE=
 github.com/amazon-contributing/opentelemetry-collector-contrib/processor/resourcedetectionprocessor v0.0.0-20231221155153-92710a714293 h1:x44yeVvtVWIjl7aAwnFEpGqF/vnToGo4XsU+At/+p9k=
 github.com/amazon-contributing/opentelemetry-collector-contrib/processor/resourcedetectionprocessor v0.0.0-20231221155153-92710a714293/go.mod h1:L4/sIFbml9J28qd8i2aJGztmCg2FCCtfTdwikpu4JEs=
 github.com/amazon-contributing/opentelemetry-collector-contrib/receiver/awscontainerinsightreceiver v0.0.0-20231221155153-92710a714293 h1:/zN4UcdF82q1tPSQOx1kcniGO/9JCmbm4a8HjKv8/AE=
@@ -935,6 +933,8 @@ github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil v0.89.0 
 github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil v0.89.0/go.mod h1:oyLPe07YKGU38ANwNCisNyad2/xBUNslHuziYHE00v4=
 github.com/open-telemetry/opentelemetry-collector-contrib/pkg/resourcetotelemetry v0.89.0 h1:qPwyUva7Vjnp7WJAA8vOw7SEfGdKW2w5sKlCondKl68=
 github.com/open-telemetry/opentelemetry-collector-contrib/pkg/resourcetotelemetry v0.89.0/go.mod h1:rHxhO+rTfEfAo9xtEZSJXdvbiw1Gcya1EIX2knIa2xo=
+github.com/open-telemetry/opentelemetry-collector-contrib/pkg/translator/prometheus v0.89.0 h1:YK17XegxPxT5sZJIx2iqAen8G7LIIOlHjGrwr7Uka7E=
+github.com/open-telemetry/opentelemetry-collector-contrib/pkg/translator/prometheus v0.89.0/go.mod h1:HXv8nyJ+RUHGLZMPbaPFnWKonYWNTJfZ9ZUudqtwudw=
 github.com/open-telemetry/opentelemetry-collector-contrib/pkg/translator/prometheusremotewrite v0.89.0 h1:Lu16kQylQWaI217RMA3E3mPos2RUEN7oybg+7YzCbzM=
 github.com/open-telemetry/opentelemetry-collector-contrib/processor/cumulativetodeltaprocessor v0.89.0 h1:VaxkGMEy9QqDmngEFU5zgy2lra216CEz05p1cP/g8FE=
 github.com/open-telemetry/opentelemetry-collector-contrib/processor/cumulativetodeltaprocessor v0.89.0/go.mod h1:n7Ha6X8VPlgWoYby+V32W9jmMEu0u3SdnWSYWBuAano=
