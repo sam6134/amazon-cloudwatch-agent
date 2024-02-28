@@ -199,7 +199,7 @@ jobs:
         uses: nick-fields/retry@v2
         with:
           max_attempts: 1
-          timeout_minutes: 35 # EKS takes about 20 minutes to spin up a cluster and service on the cluster
+          timeout_minutes: 36 # EKS takes about 20 minutes to spin up a cluster and service on the cluster
           retry_wait_seconds: 5
           command: |
             if [ "${{ matrix.arrays.terraform_dir }}" != "" ]; then
