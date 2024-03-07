@@ -45,7 +45,7 @@ const (
 	ContainerInsightsMetricGranularity = "metric_granularity" // replaced with enhanced_container_insights
 	EnhancedContainerInsights          = "enhanced_container_insights"
 	PreferFullPodName                  = "prefer_full_pod_name"
-	EnableGpuMetric                    = "gpu_metrics"
+	EnableAcceleratedComputeMetric     = "accelerated_compute_metrics"
 	Console                            = "console"
 	DiskIOKey                          = "diskio"
 	NetKey                             = "net"
@@ -54,6 +54,7 @@ const (
 	ServiceAddress                     = "service_address"
 	Udp                                = "udp"
 	Tcp                                = "tcp"
+	TlsKey                             = "tls"
 	Region                             = "region"
 	LogGroupName                       = "log_group_name"
 	LogStreamName                      = "log_stream_name"

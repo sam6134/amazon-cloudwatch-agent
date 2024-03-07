@@ -101,6 +101,9 @@ extensions:
         stats:
             operations:
                 - PutLogEvents
+            usage_flags:
+                mode: EC2
+                region_type: ACJ
 processors:
     batch/containerinsights:
         metadata_cardinality_limit: 1000
@@ -141,6 +144,7 @@ receivers:
         role_arn: ""
         shared_credentials_file: []
         gpu_metrics: true
+        accelerated_compute_metrics: true
     tcplog/emf_logs:
         attributes: {}
         encoding: utf-8
