@@ -115,3 +115,7 @@ func (t *translator) Translate(conf *confmap.Conf) (component.Config, error) {
 
 	return cfg, nil
 }
+
+func isGpuEnabled(conf *confmap.Conf) bool {
+	return common.GetOrDefaultBool(conf, common.ConfigKey(common.LogsKey, common.MetricsCollectedKey, common.KubernetesKey, common.EnableGpuMetric), true)
+}

@@ -4,6 +4,7 @@
 package awsemf
 
 import (
+	"github.com/aws/amazon-cloudwatch-agent/translator/translate/otel/common"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awsemfexporter"
 	"go.opentelemetry.io/collector/confmap"
 
@@ -463,6 +464,7 @@ func getControlPlaneMetricDescriptors(conf *confmap.Conf) []awsemfexporter.Metri
 
 func getGPUMetricDeclarations(conf *confmap.Conf) []*awsemfexporter.MetricDeclaration {
 	var metricDeclarations []*awsemfexporter.MetricDeclaration
+
 	enhancedContainerInsightsEnabled := awscontainerinsight.EnhancedContainerInsightsEnabled(conf)
 	if awscontainerinsight.AcceleratedComputeMetricsEnabled(conf) && enhancedContainerInsightsEnabled {
 		metricDeclarations = append(metricDeclarations, []*awsemfexporter.MetricDeclaration{
@@ -493,6 +495,7 @@ func getGPUMetricDeclarations(conf *confmap.Conf) []*awsemfexporter.MetricDeclar
 				MetricNameSelectors: []string{
 					"node_gpu_utilization",
 					"node_gpu_memory_utilization",
+
 					"node_gpu_memory_total",
 					"node_gpu_memory_used",
 					"node_gpu_power_draw",

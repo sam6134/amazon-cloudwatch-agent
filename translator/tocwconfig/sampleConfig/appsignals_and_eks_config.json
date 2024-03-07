@@ -20,6 +20,7 @@
         "metrics_collection_interval": 30,
         "disable_metric_extraction": true,
         "enhanced_container_insights": false,
+        "gpu_metrics": false
         "accelerated_compute_metrics": false
       }
     },
