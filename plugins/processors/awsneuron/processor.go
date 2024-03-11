@@ -64,7 +64,9 @@ func (d *awsneuronprocessor) processMetrics(ctx context.Context, md pmetric.Metr
 			newMetrics.CopyTo(metrics)
 		}
 	}
-	d.logMd(md, "neuron metrics object after modification")
+	if isNeuron {
+		d.logMd(md, "neuron metrics object after modification")
+	}
 	return md, nil
 }
 
