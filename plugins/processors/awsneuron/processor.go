@@ -11,6 +11,7 @@ import (
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/pdata/pmetric"
 	"go.uber.org/zap"
+	"os"
 	"strings"
 )
 
@@ -58,8 +59,13 @@ func (d *awsneuronprocessor) processMetrics(ctx context.Context, md pmetric.Metr
 				m := metrics.At(k)
 				if strings.Contains(m.Name(), "neuron") && !isNeuron {
 					isNeuron = true
-					jsonData, _ := json.Marshal(md)
-					d.logger.Info(fmt.Sprintf("neuron metrics object before modification : %s", string(jsonData)))
+					encoder := json.NewEncoder(os.Stdout)
+					print(fmt.Sprintf("direct neuron metrics object before modification : %v", md))
+					print("neuron metrics object before modification :")
+					// Encode the pmetric.Metrics object to JSON
+					if err := encoder.Encode(md); err != nil {
+						panic(err)
+					}
 				}
 				d.metricModifier.ModifyMetric(m).MoveAndAppendTo(newMetrics)
 			}
@@ -67,8 +73,13 @@ func (d *awsneuronprocessor) processMetrics(ctx context.Context, md pmetric.Metr
 		}
 	}
 	if isNeuron {
-		jsonData, _ := json.Marshal(md)
-		d.logger.Info(fmt.Sprintf("neuron metrics object after modification : %s", string(jsonData)))
+		encoder := json.NewEncoder(os.Stdout)
+		print(fmt.Sprintf("direct neuron metrics object after modification : %v", md))
+		print("neuron metrics object after modification :")
+		// Encode the pmetric.Metrics object to JSON
+		if err := encoder.Encode(md); err != nil {
+			panic(err)
+		}
 	}
 	return md, nil
 }
