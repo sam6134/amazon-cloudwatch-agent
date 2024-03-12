@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"fmt"
 	"github.com/aws/amazon-cloudwatch-agent/internal/containerinsightscommon"
 	"go.opentelemetry.io/collector/pdata/pmetric"
 	"go.uber.org/zap"
@@ -91,12 +92,14 @@ func (md *MetricModifier) createAggregatedSumMetrics(originalMetric pmetric.Metr
 
 			// Creating a new metric from the current datapoint and adding it to the new newMetricSlice
 			newMetricFromAttributeValue, _ := originalDatapoint.Attributes().Get(aggregationAttributeKey)
-			//if _, exists := metricModificationsMap[originalMetric.Name()].NewMetricsCreatedFromAttributes[newMetricFromAttributeValue.Str()]; exists {
-			newNameMetric := newMetricSlice.AppendEmpty()
-			newNameMetric.SetName(originalMetric.Name() + "_" + newMetricFromAttributeValue.Str())
-			originalDatapoint.CopyTo(newNameMetric.SetEmptySum().DataPoints().AppendEmpty())
-			newNameMetric.Sum().SetAggregationTemporality(pmetric.AggregationTemporalityCumulative)
-			//}
+
+			md.logger.Info(fmt.Sprintf("originalMetricName: %s newMetricFromAttributeValue: %s", originalMetric.Name(), newMetricFromAttributeValue.Str()))
+			if _, exists := metricModificationsMap[originalMetric.Name()].NewMetricsCreatedFromAttributes[newMetricFromAttributeValue.Str()]; exists {
+				newNameMetric := newMetricSlice.AppendEmpty()
+				newNameMetric.SetName(originalMetric.Name() + "_" + newMetricFromAttributeValue.Str())
+				originalDatapoint.CopyTo(newNameMetric.SetEmptySum().DataPoints().AppendEmpty())
+				newNameMetric.Sum().SetAggregationTemporality(pmetric.AggregationTemporalityCumulative)
+			}
 		}
 		aggregatedMetric.Sum().DataPoints().At(0).SetDoubleValue(aggregatedValue)
 		aggregatedMetric.Sum().SetAggregationTemporality(pmetric.AggregationTemporalityCumulative)
