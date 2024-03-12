@@ -77,9 +77,9 @@ func (md *MetricModifier) ModifyMetric(originalMetric pmetric.Metric) pmetric.Me
 
 func (md *MetricModifier) createAggregatedSumMetrics(originalMetric pmetric.Metric) pmetric.MetricSlice {
 	newMetricSlice := pmetric.NewMetricSlice()
-	originalMetricDatapoints := getMetricDatapoints(originalMetric)
 
 	if aggregationAttributeKey := metricModificationsMap[originalMetric.Name()].AggregationAttributeKey; aggregationAttributeKey != "" && originalMetric.Type() == pmetric.MetricTypeSum {
+		originalMetricDatapoints := getMetricDatapoints(originalMetric)
 		aggregatedMetric := newMetricSlice.AppendEmpty()
 		// Creating body for the aggregated metric and add it to the new newMetricSlice
 		aggregatedMetric.SetName(originalMetric.Name() + aggregatedMetricSuffix)
@@ -87,16 +87,15 @@ func (md *MetricModifier) createAggregatedSumMetrics(originalMetric pmetric.Metr
 		aggregatedValue := 0.0
 		for i := 0; i < originalMetricDatapoints.Len(); i++ {
 			originalDatapoint := originalMetricDatapoints.At(i)
-			md.logger.Info("value type : " + originalDatapoint.ValueType().String())
 			aggregatedValue += originalDatapoint.DoubleValue()
 
 			// Creating a new metric from the current datapoint and adding it to the new newMetricSlice
 			newMetricFromAttributeValue, _ := originalDatapoint.Attributes().Get(aggregationAttributeKey)
 
-			md.logger.Info(fmt.Sprintf("originalMetricName: %s newMetricFromAttributeValue: %s", originalMetric.Name(), newMetricFromAttributeValue.Str()))
-			if _, exists := metricModificationsMap[originalMetric.Name()].NewMetricsCreatedFromAttributes[newMetricFromAttributeValue.Str()]; exists {
+			if _, exists := metricModificationsMap[originalMetric.Name()].NewMetricsCreatedFromAttributes[newMetricFromAttributeValue.AsString()]; exists {
+				md.logger.Info(fmt.Sprintf("originalMetricName: %s newMetricFromAttributeValue: %s", originalMetric.Name(), newMetricFromAttributeValue.Str()))
 				newNameMetric := newMetricSlice.AppendEmpty()
-				newNameMetric.SetName(originalMetric.Name() + "_" + newMetricFromAttributeValue.Str())
+				newNameMetric.SetName(originalMetric.Name() + "_" + newMetricFromAttributeValue.AsString())
 				originalDatapoint.CopyTo(newNameMetric.SetEmptySum().DataPoints().AppendEmpty())
 				newNameMetric.Sum().SetAggregationTemporality(pmetric.AggregationTemporalityCumulative)
 			}
