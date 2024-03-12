@@ -5,10 +5,12 @@ package awsneuron
 
 import (
 	"context"
+	"fmt"
 	"github.com/aws/amazon-cloudwatch-agent/plugins/processors/awsneuron/internal"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/pdata/pmetric"
 	"go.uber.org/zap"
+	"strings"
 )
 
 const (
@@ -54,10 +56,42 @@ func (d *awsneuronprocessor) processMetrics(ctx context.Context, md pmetric.Metr
 				m := metrics.At(k)
 				d.metricModifier.ModifyMetric(m).MoveAndAppendTo(newMetrics)
 			}
+			d.logMd(newMetrics, "metric slice after modifications")
 			newMetrics.CopyTo(ils.Metrics())
 		}
 	}
 	return md, nil
+}
+
+func (dc *awsneuronprocessor) logMd(metrics pmetric.MetricSlice, mdName string) {
+	var logMessage strings.Builder
+	logMessage.WriteString(mdName + "   ->   ")
+	for k := 0; k < metrics.Len(); k++ {
+		m := metrics.At(k)
+		logMessage.WriteString(fmt.Sprintf("\t\t\t\"Metric_%d\": {\n", k))
+		logMessage.WriteString(fmt.Sprintf("\t\t\t\t\"name\": \"%s\",\n", m.Name()))
+
+		var datapoints pmetric.NumberDataPointSlice
+		switch m.Type() {
+		case pmetric.MetricTypeGauge:
+			datapoints = m.Gauge().DataPoints()
+		case pmetric.MetricTypeSum:
+			datapoints = m.Sum().DataPoints()
+		default:
+			datapoints = pmetric.NewNumberDataPointSlice()
+		}
+
+		logMessage.WriteString("\t\t\t\t\"datapoints\": [\n")
+		for yu := 0; yu < datapoints.Len(); yu++ {
+			logMessage.WriteString("\t\t\t\t\t{\n")
+			logMessage.WriteString(fmt.Sprintf("\t\t\t\t\t\t\"attributes\": \"%v\",\n", datapoints.At(yu).Attributes().AsRaw()))
+			logMessage.WriteString(fmt.Sprintf("\t\t\t\t\t\t\"value\": %v,\n", datapoints.At(yu).DoubleValue()))
+			logMessage.WriteString("\t\t\t\t\t},\n")
+		}
+		logMessage.WriteString("\t\t\t\t],\n")
+		logMessage.WriteString("\t\t\t},\n")
+	}
+	dc.logger.Info(logMessage.String())
 }
 
 func (d *awsneuronprocessor) Shutdown(context.Context) error {
