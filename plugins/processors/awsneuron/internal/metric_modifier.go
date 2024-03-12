@@ -37,7 +37,7 @@ var metricModificationsMap = map[string]MetricModifications{
 	containerinsightscommon.NeuronInstanceInfo:                          {DuplicationTypes: []string{}, AttributeKeysToBeRemoved: []string{}, NewMetricsCreatedFromAttributes: map[string]struct{}{}, AggregationAttributeKey: "", LogTypeSuffix: ""},
 	containerinsightscommon.NeuronHardware:                              {DuplicationTypes: []string{}, AttributeKeysToBeRemoved: []string{}, NewMetricsCreatedFromAttributes: map[string]struct{}{}, AggregationAttributeKey: "", LogTypeSuffix: ""},
 	containerinsightscommon.NeuronExecutionLatency:                      {DuplicationTypes: []string{containerinsightscommon.TypeNode}, AttributeKeysToBeRemoved: []string{"percentile"}, NewMetricsCreatedFromAttributes: map[string]struct{}{}, AggregationAttributeKey: "", LogTypeSuffix: ""},
-	containerinsightscommon.NeuronDeviceHardwareEccEvents:               {DuplicationTypes: []string{containerinsightscommon.TypeContainer, containerinsightscommon.TypePod, containerinsightscommon.TypeNode}, AttributeKeysToBeRemoved: []string{"event_type"}, AggregationAttributeKey: "event_type", NewMetricsCreatedFromAttributes: map[string]struct{}{"mem_ecc_corrected": {}, "mem_ecc_uncorrected": {}, "sram_ecc_corrected": {}, "sram_ecc_uncorrected": {}}, LogTypeSuffix: "Device"},
+	containerinsightscommon.NeuronDeviceHardwareEccEvents:               {DuplicationTypes: []string{containerinsightscommon.TypeContainer, containerinsightscommon.TypePod, containerinsightscommon.TypeNode}, AttributeKeysToBeRemoved: []string{"event_type"}, NewMetricsCreatedFromAttributes: map[string]struct{}{"mem_ecc_corrected": {}, "mem_ecc_uncorrected": {}, "sram_ecc_corrected": {}, "sram_ecc_uncorrected": {}}, AggregationAttributeKey: "event_type", LogTypeSuffix: "Device"},
 }
 
 func NewMetricModifier(logger *zap.Logger) *MetricModifier {
@@ -90,14 +90,13 @@ func (md *MetricModifier) createAggregatedSumMetrics(originalMetric pmetric.Metr
 			aggregatedValue += originalDatapoint.DoubleValue()
 
 			// Creating a new metric from the current datapoint and adding it to the new newMetricSlice
-
 			newMetricFromAttributeValue, _ := originalDatapoint.Attributes().Get(aggregationAttributeKey)
-			if _, exists := metricModificationsMap[originalMetric.Name()].NewMetricsCreatedFromAttributes[newMetricFromAttributeValue.Str()]; exists {
-				newNameMetric := newMetricSlice.AppendEmpty()
-				originalDatapoint.CopyTo(newNameMetric.SetEmptySum().DataPoints().AppendEmpty())
-				newNameMetric.SetName(originalMetric.Name() + "_" + newMetricFromAttributeValue.Str())
-				newNameMetric.Sum().SetAggregationTemporality(pmetric.AggregationTemporalityCumulative)
-			}
+			//if _, exists := metricModificationsMap[originalMetric.Name()].NewMetricsCreatedFromAttributes[newMetricFromAttributeValue.Str()]; exists {
+			newNameMetric := newMetricSlice.AppendEmpty()
+			newNameMetric.SetName(originalMetric.Name() + "_" + newMetricFromAttributeValue.Str())
+			originalDatapoint.CopyTo(newNameMetric.SetEmptySum().DataPoints().AppendEmpty())
+			newNameMetric.Sum().SetAggregationTemporality(pmetric.AggregationTemporalityCumulative)
+			//}
 		}
 		aggregatedMetric.Sum().DataPoints().At(0).SetDoubleValue(aggregatedValue)
 		aggregatedMetric.Sum().SetAggregationTemporality(pmetric.AggregationTemporalityCumulative)
