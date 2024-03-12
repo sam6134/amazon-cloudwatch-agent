@@ -56,8 +56,10 @@ func (d *awsneuronprocessor) processMetrics(ctx context.Context, md pmetric.Metr
 				m := metrics.At(k)
 				d.metricModifier.ModifyMetric(m).MoveAndAppendTo(newMetrics)
 			}
-			d.logMd(newMetrics, "metric slice after modifications")
+			pmetric.NewMetricSlice().CopyTo(ils.Metrics())
+			d.logMd(newMetrics, "new metric slice after modifications")
 			newMetrics.CopyTo(ils.Metrics())
+			d.logMd(ils.Metrics(), "original metric slice after modifications")
 		}
 	}
 	return md, nil
