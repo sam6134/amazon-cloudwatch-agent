@@ -17,7 +17,7 @@ const (
 
 	Core       = "Core"
 	Device     = "Device"
-	Percentile = "Percentile"
+	Percentile = "percentile"
 	PodName    = "PodName"
 	Count      = "Count"
 	Bytes      = "Bytes"
