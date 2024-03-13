@@ -76,6 +76,7 @@ func (md *MetricModifier) ModifyMetric(originalMetric pmetric.Metric) pmetric.Me
 		originalMetric = convertGaugeToSum(originalMetric)
 	}
 
+	addUnit(originalMetric)
 	modifiedMetricSlice := pmetric.NewMetricSlice()
 
 	if originalMetricName == containerinsightscommon.NeuronExecutionLatency {
@@ -211,4 +212,8 @@ func convertGaugeToSum(originalMetric pmetric.Metric) pmetric.Metric {
 	convertedMetric.SetEmptySum()
 	originalMetric.Gauge().DataPoints().CopyTo(convertedMetric.Sum().DataPoints())
 	return convertedMetric
+}
+
+func addUnit(originalMetric pmetric.Metric) {
+	originalMetric.SetUnit(metricModificationsMap[originalMetric.Name()].Unit)
 }
