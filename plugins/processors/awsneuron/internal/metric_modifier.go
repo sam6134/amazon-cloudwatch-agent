@@ -1,3 +1,6 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: MIT
+
 package internal
 
 import (
@@ -12,7 +15,7 @@ const (
 	ErrorType              = "error_type"
 	StatusType             = "status_type"
 	EventType              = "event_type"
-	logTypeSuffix          = "AwsNeuron"
+	logTypeSuffix          = "AWSNeuron"
 	MemoryLocation         = "memory_location"
 
 	Core       = "Core"
@@ -21,7 +24,7 @@ const (
 	PodName    = "PodName"
 	Count      = "Count"
 	Bytes      = "Bytes"
-	Second     = "Seconds"
+	Seconds    = "Seconds"
 	Percent    = "Percent"
 )
 
@@ -50,7 +53,7 @@ var (
 		containerinsightscommon.NeuronCoreUtilization:                       {DuplicationTypes: []string{containerinsightscommon.TypeContainer, containerinsightscommon.TypePod, containerinsightscommon.TypeNode}, AttributeKeysToBeRemoved: []string{}, AggregationAttributeKey: "", LogTypeSuffix: Core, Unit: Percent},
 		containerinsightscommon.NeuronInstanceInfo:                          {DuplicationTypes: []string{}, AttributeKeysToBeRemoved: []string{}, AggregationAttributeKey: "", LogTypeSuffix: "", Unit: Count},
 		containerinsightscommon.NeuronHardware:                              {DuplicationTypes: []string{}, AttributeKeysToBeRemoved: []string{}, AggregationAttributeKey: "", LogTypeSuffix: "", Unit: Count},
-		containerinsightscommon.NeuronExecutionLatency:                      {DuplicationTypes: []string{containerinsightscommon.TypeNode}, AttributeKeysToBeRemoved: []string{Percentile}, AggregationAttributeKey: "", LogTypeSuffix: "", Unit: Second},
+		containerinsightscommon.NeuronExecutionLatency:                      {DuplicationTypes: []string{containerinsightscommon.TypeNode}, AttributeKeysToBeRemoved: []string{Percentile}, AggregationAttributeKey: "", LogTypeSuffix: "", Unit: Seconds},
 		containerinsightscommon.NeuronDeviceHardwareEccEvents:               {DuplicationTypes: []string{containerinsightscommon.TypeContainer, containerinsightscommon.TypePod, containerinsightscommon.TypeNode}, AttributeKeysToBeRemoved: []string{EventType}, AggregationAttributeKey: EventType, LogTypeSuffix: Device, Unit: Count},
 	}
 	attributeValuePrefixingMap = map[string]string{"NeuronCore": "core", "NeuronDevice": "device"}
