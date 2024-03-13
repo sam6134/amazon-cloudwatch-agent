@@ -9,7 +9,16 @@ import (
 
 const (
 	aggregatedMetricSuffix = "_total"
+	ErrorType              = "error_type"
+	StatusType             = "status_type"
+	EventType              = "event_type"
 	logTypeSuffix          = "AwsNeuron"
+	MemoryLocation         = "memory_location"
+
+	Core       = "Core"
+	Device     = "Device"
+	Percentile = "Percentile"
+	PodName    = "PodName"
 )
 
 type MetricModifier struct {
@@ -23,21 +32,24 @@ type MetricModifications struct {
 	LogTypeSuffix            string
 }
 
-var metricModificationsMap = map[string]MetricModifications{
-	containerinsightscommon.NeuronExecutionErrors:                       {DuplicationTypes: []string{containerinsightscommon.TypeNode}, AttributeKeysToBeRemoved: []string{"error_type"}, AggregationAttributeKey: "error_type", LogTypeSuffix: ""},
-	containerinsightscommon.NeuronExecutionStatus:                       {DuplicationTypes: []string{containerinsightscommon.TypeNode}, AttributeKeysToBeRemoved: []string{"status_type"}, AggregationAttributeKey: "status_type", LogTypeSuffix: ""},
-	containerinsightscommon.NeuronRuntimeMemoryUsage:                    {DuplicationTypes: []string{containerinsightscommon.TypeNode}, AttributeKeysToBeRemoved: []string{"memory_location"}, AggregationAttributeKey: "", LogTypeSuffix: ""},
-	containerinsightscommon.NeuronCoreMemoryUtilizationConstants:        {DuplicationTypes: []string{containerinsightscommon.TypeContainer, containerinsightscommon.TypePod, containerinsightscommon.TypeNode}, AttributeKeysToBeRemoved: []string{"memory_location"}, AggregationAttributeKey: "", LogTypeSuffix: "Core"},
-	containerinsightscommon.NeuronCoreMemoryUtilizationModelCode:        {DuplicationTypes: []string{containerinsightscommon.TypeContainer, containerinsightscommon.TypePod, containerinsightscommon.TypeNode}, AttributeKeysToBeRemoved: []string{"memory_location"}, AggregationAttributeKey: "", LogTypeSuffix: "Core"},
-	containerinsightscommon.NeuronCoreMemoryUtilizationSharedScratchpad: {DuplicationTypes: []string{containerinsightscommon.TypeContainer, containerinsightscommon.TypePod, containerinsightscommon.TypeNode}, AttributeKeysToBeRemoved: []string{"memory_location"}, AggregationAttributeKey: "", LogTypeSuffix: "Core"},
-	containerinsightscommon.NeuronCoreMemoryUtilizationRuntimeMemory:    {DuplicationTypes: []string{containerinsightscommon.TypeContainer, containerinsightscommon.TypePod, containerinsightscommon.TypeNode}, AttributeKeysToBeRemoved: []string{"memory_location"}, AggregationAttributeKey: "", LogTypeSuffix: "Core"},
-	containerinsightscommon.NeuronCoreMemoryUtilizationTensors:          {DuplicationTypes: []string{containerinsightscommon.TypeContainer, containerinsightscommon.TypePod, containerinsightscommon.TypeNode}, AttributeKeysToBeRemoved: []string{"memory_location"}, AggregationAttributeKey: "", LogTypeSuffix: "Core"},
-	containerinsightscommon.NeuronCoreUtilization:                       {DuplicationTypes: []string{containerinsightscommon.TypeContainer, containerinsightscommon.TypePod, containerinsightscommon.TypeNode}, AttributeKeysToBeRemoved: []string{}, AggregationAttributeKey: "", LogTypeSuffix: "Core"},
-	containerinsightscommon.NeuronInstanceInfo:                          {DuplicationTypes: []string{}, AttributeKeysToBeRemoved: []string{}, AggregationAttributeKey: "", LogTypeSuffix: ""},
-	containerinsightscommon.NeuronHardware:                              {DuplicationTypes: []string{}, AttributeKeysToBeRemoved: []string{}, AggregationAttributeKey: "", LogTypeSuffix: ""},
-	containerinsightscommon.NeuronExecutionLatency:                      {DuplicationTypes: []string{containerinsightscommon.TypeNode}, AttributeKeysToBeRemoved: []string{"percentile"}, AggregationAttributeKey: "", LogTypeSuffix: ""},
-	containerinsightscommon.NeuronDeviceHardwareEccEvents:               {DuplicationTypes: []string{containerinsightscommon.TypeContainer, containerinsightscommon.TypePod, containerinsightscommon.TypeNode}, AttributeKeysToBeRemoved: []string{"event_type"}, AggregationAttributeKey: "event_type", LogTypeSuffix: "Device"},
-}
+var (
+	metricModificationsMap = map[string]MetricModifications{
+		containerinsightscommon.NeuronExecutionErrors:                       {DuplicationTypes: []string{containerinsightscommon.TypeNode}, AttributeKeysToBeRemoved: []string{ErrorType}, AggregationAttributeKey: ErrorType, LogTypeSuffix: ""},
+		containerinsightscommon.NeuronExecutionStatus:                       {DuplicationTypes: []string{containerinsightscommon.TypeNode}, AttributeKeysToBeRemoved: []string{StatusType}, AggregationAttributeKey: StatusType, LogTypeSuffix: ""},
+		containerinsightscommon.NeuronRuntimeMemoryUsage:                    {DuplicationTypes: []string{containerinsightscommon.TypeNode}, AttributeKeysToBeRemoved: []string{MemoryLocation}, AggregationAttributeKey: "", LogTypeSuffix: ""},
+		containerinsightscommon.NeuronCoreMemoryUtilizationConstants:        {DuplicationTypes: []string{containerinsightscommon.TypeContainer, containerinsightscommon.TypePod, containerinsightscommon.TypeNode}, AttributeKeysToBeRemoved: []string{MemoryLocation}, AggregationAttributeKey: "", LogTypeSuffix: Core},
+		containerinsightscommon.NeuronCoreMemoryUtilizationModelCode:        {DuplicationTypes: []string{containerinsightscommon.TypeContainer, containerinsightscommon.TypePod, containerinsightscommon.TypeNode}, AttributeKeysToBeRemoved: []string{MemoryLocation}, AggregationAttributeKey: "", LogTypeSuffix: Core},
+		containerinsightscommon.NeuronCoreMemoryUtilizationSharedScratchpad: {DuplicationTypes: []string{containerinsightscommon.TypeContainer, containerinsightscommon.TypePod, containerinsightscommon.TypeNode}, AttributeKeysToBeRemoved: []string{MemoryLocation}, AggregationAttributeKey: "", LogTypeSuffix: Core},
+		containerinsightscommon.NeuronCoreMemoryUtilizationRuntimeMemory:    {DuplicationTypes: []string{containerinsightscommon.TypeContainer, containerinsightscommon.TypePod, containerinsightscommon.TypeNode}, AttributeKeysToBeRemoved: []string{MemoryLocation}, AggregationAttributeKey: "", LogTypeSuffix: Core},
+		containerinsightscommon.NeuronCoreMemoryUtilizationTensors:          {DuplicationTypes: []string{containerinsightscommon.TypeContainer, containerinsightscommon.TypePod, containerinsightscommon.TypeNode}, AttributeKeysToBeRemoved: []string{MemoryLocation}, AggregationAttributeKey: "", LogTypeSuffix: Core},
+		containerinsightscommon.NeuronCoreUtilization:                       {DuplicationTypes: []string{containerinsightscommon.TypeContainer, containerinsightscommon.TypePod, containerinsightscommon.TypeNode}, AttributeKeysToBeRemoved: []string{}, AggregationAttributeKey: "", LogTypeSuffix: Core},
+		containerinsightscommon.NeuronInstanceInfo:                          {DuplicationTypes: []string{}, AttributeKeysToBeRemoved: []string{}, AggregationAttributeKey: "", LogTypeSuffix: ""},
+		containerinsightscommon.NeuronHardware:                              {DuplicationTypes: []string{}, AttributeKeysToBeRemoved: []string{}, AggregationAttributeKey: "", LogTypeSuffix: ""},
+		containerinsightscommon.NeuronExecutionLatency:                      {DuplicationTypes: []string{containerinsightscommon.TypeNode}, AttributeKeysToBeRemoved: []string{Percentile}, AggregationAttributeKey: "", LogTypeSuffix: ""},
+		containerinsightscommon.NeuronDeviceHardwareEccEvents:               {DuplicationTypes: []string{containerinsightscommon.TypeContainer, containerinsightscommon.TypePod, containerinsightscommon.TypeNode}, AttributeKeysToBeRemoved: []string{EventType}, AggregationAttributeKey: EventType, LogTypeSuffix: Device},
+	}
+	attributeValuePrefixingMap = map[string]string{"NeuronCore": "core", "NeuronDevice": "device"}
+)
 
 func NewMetricModifier(logger *zap.Logger) *MetricModifier {
 	d := &MetricModifier{
@@ -90,7 +102,6 @@ func (md *MetricModifier) createAggregatedSumMetrics(originalMetric pmetric.Metr
 		aggregatedValue := 0.0
 		for i := 0; i < originalMetricDatapoints.Len(); i++ {
 			originalDatapoint := originalMetricDatapoints.At(i)
-			md.logger.Info("value type : " + originalDatapoint.ValueType().String())
 			aggregatedValue += originalDatapoint.DoubleValue()
 
 			// Creating a new metric from the current datapoint and adding it to the new newMetricSlice
@@ -115,7 +126,7 @@ func (md *MetricModifier) duplicateMetrics(metricsSlice pmetric.MetricSlice, ori
 
 	duplicateForNodeOnly := false
 	if originalMetricName == containerinsightscommon.NeuronDeviceHardwareEccEvents {
-		podname, exists := originalMetricDatapoints.At(0).Attributes().Get("PodName")
+		podname, exists := originalMetricDatapoints.At(0).Attributes().Get(PodName)
 		if !exists || len(podname.Str()) == 0 {
 			duplicateForNodeOnly = true
 		}
@@ -151,11 +162,17 @@ func duplicateMetricForType(metric pmetric.Metric, duplicateType string, origina
 func filterLabels(slice pmetric.MetricSlice, originalMetricName string) {
 	for i := 0; i < slice.Len(); i++ {
 		m := slice.At(i)
-		for _, attributeRemovalKey := range metricModificationsMap[originalMetricName].AttributeKeysToBeRemoved {
-			dps := m.Sum().DataPoints()
-			for i := 0; i < dps.Len(); i++ {
-				dp := dps.At(i)
+
+		dps := m.Sum().DataPoints()
+		for i := 0; i < dps.Len(); i++ {
+			dp := dps.At(i)
+			for _, attributeRemovalKey := range metricModificationsMap[originalMetricName].AttributeKeysToBeRemoved {
 				dp.Attributes().Remove(attributeRemovalKey)
+			}
+			for attributeKey, attributeValuePrefix := range attributeValuePrefixingMap {
+				if value, exists := dp.Attributes().Get(attributeKey); exists {
+					dp.Attributes().PutStr(attributeKey, attributeValuePrefix+value.AsString())
+				}
 			}
 		}
 	}
