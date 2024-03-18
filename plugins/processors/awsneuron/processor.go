@@ -64,7 +64,7 @@ func (d *awsneuronprocessor) processMetrics(ctx context.Context, md pmetric.Metr
 				d.metricModifier.ModifyMetric(m).MoveAndAppendTo(newMetrics)
 			}
 			aggregatedMemoryMetric := d.memoryMetricAggregator.FlushAggregatedMemoryMetric()
-			d.metricModifier.ModifyMetric(aggregatedMemoryMetric).MoveAndAppendTo(newMetrics)
+			d.logMetricSlice(d.metricModifier.ModifyMetric(aggregatedMemoryMetric), "AggregatedMemoryMetric")
 			newMetrics.CopyTo(metrics)
 		}
 	}
@@ -136,4 +136,42 @@ func (d *awsneuronprocessor) logMd(md pmetric.Metrics, name string) {
 	logMessage.WriteString("},\n")
 
 	d.logger.Info(logMessage.String())
+}
+
+func (d *awsneuronprocessor) logMetricSlice(metrics pmetric.MetricSlice, name string) {
+
+	var logMessage strings.Builder
+
+	logMessage.WriteString(fmt.Sprintf("\"%s_METRICS_SLICE\" : {\n", name))
+
+	logMessage.WriteString(fmt.Sprintf("\t\t\"Metrics\": [\n"))
+
+	for k := 0; k < metrics.Len(); k++ {
+		m := metrics.At(k)
+		logMessage.WriteString(fmt.Sprintf("\t\t\t\"Metric_%d\": {\n", k))
+		logMessage.WriteString(fmt.Sprintf("\t\t\t\t\"name\": \"%s\",\n", m.Name()))
+		logMessage.WriteString(fmt.Sprintf("\t\t\t\t\"type\": \"%s\",\n", m.Type().String()))
+
+		var datapoints pmetric.NumberDataPointSlice
+		switch m.Type() {
+		case pmetric.MetricTypeGauge:
+			datapoints = m.Gauge().DataPoints()
+		case pmetric.MetricTypeSum:
+			datapoints = m.Sum().DataPoints()
+		default:
+			datapoints = pmetric.NewNumberDataPointSlice()
+		}
+
+		logMessage.WriteString("\t\t\t\t\"datapoints\": [\n")
+		for yu := 0; yu < datapoints.Len(); yu++ {
+			logMessage.WriteString("\t\t\t\t\t{\n")
+			logMessage.WriteString(fmt.Sprintf("\t\t\t\t\t\t\"attributes\": \"%v\",\n", datapoints.At(yu).Attributes().AsRaw()))
+			logMessage.WriteString(fmt.Sprintf("\t\t\t\t\t\t\"timestamp\": \"%v\",\n", datapoints.At(yu).Timestamp().String()))
+			logMessage.WriteString(fmt.Sprintf("\t\t\t\t\t\t\"value\": %v,\n", datapoints.At(yu).DoubleValue()))
+			logMessage.WriteString("\t\t\t\t\t},\n")
+		}
+		logMessage.WriteString("\t\t\t\t],\n")
+		logMessage.WriteString("\t\t\t},\n")
+	}
+	logMessage.WriteString("\t\t],\n")
 }
