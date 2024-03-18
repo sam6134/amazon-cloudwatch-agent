@@ -63,8 +63,13 @@ func (d *awsneuronprocessor) processMetrics(ctx context.Context, md pmetric.Metr
 				d.memoryMetricAggregator.AggregateMemoryMetric(m)
 				d.metricModifier.ModifyMetric(m).MoveAndAppendTo(newMetrics)
 			}
-			aggregatedMemoryMetric := d.memoryMetricAggregator.FlushAggregatedMemoryMetric()
-			d.logMetricSlice(d.metricModifier.ModifyMetric(aggregatedMemoryMetric), "AggregatedMemoryMetric")
+			if d.memoryMetricAggregator.MemoryMetricsFound {
+				aggregatedMemoryMetric := d.memoryMetricAggregator.FlushAggregatedMemoryMetric()
+				slice := d.metricModifier.ModifyMetric(aggregatedMemoryMetric)
+				d.logMetricSlice(slice, "AggregatedMemoryMetric")
+				slice.MoveAndAppendTo(newMetrics)
+			}
+
 			newMetrics.CopyTo(metrics)
 		}
 	}
@@ -174,4 +179,5 @@ func (d *awsneuronprocessor) logMetricSlice(metrics pmetric.MetricSlice, name st
 		logMessage.WriteString("\t\t\t},\n")
 	}
 	logMessage.WriteString("\t\t],\n")
+	d.logger.Info(logMessage.String())
 }

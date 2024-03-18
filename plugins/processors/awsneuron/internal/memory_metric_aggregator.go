@@ -20,14 +20,16 @@ type MemoryMetricAggregator struct {
 	memoryMetricValuesAggregator     map[NeuronCoreInfo]float64
 	aggregatedMemoryMetricAttributes pcommon.Map
 	metricTimestamp                  pcommon.Timestamp
+	MemoryMetricsFound               bool
 }
 
 func NewMemoryMemoryAggregator() *MemoryMetricAggregator {
-	return &MemoryMetricAggregator{memoryMetricValuesAggregator: map[NeuronCoreInfo]float64{}}
+	return &MemoryMetricAggregator{memoryMetricValuesAggregator: map[NeuronCoreInfo]float64{}, MemoryMetricsFound: false}
 }
 
 func (d *MemoryMetricAggregator) AggregateMemoryMetric(originalMetric pmetric.Metric) {
 	if strings.Contains(originalMetric.Name(), NeuronCoreMemoryUsagePrefix) {
+		d.MemoryMetricsFound = true
 		datapoints := originalMetric.Gauge().DataPoints()
 		d.aggregatedMemoryMetricAttributes = datapoints.At(0).Attributes()
 		d.metricTimestamp = datapoints.At(0).Timestamp()
@@ -71,4 +73,5 @@ func (d *MemoryMetricAggregator) FlushAggregatedMemoryMetric() pmetric.Metric {
 
 func (d *MemoryMetricAggregator) resetMemoryMetricAggregator() {
 	d.memoryMetricValuesAggregator = map[NeuronCoreInfo]float64{}
+	d.MemoryMetricsFound = false
 }
