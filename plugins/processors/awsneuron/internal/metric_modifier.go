@@ -18,14 +18,16 @@ const (
 	logTypeSuffix          = "AWSNeuron"
 	MemoryLocation         = "memory_location"
 
-	Core       = "Core"
-	Device     = "Device"
-	Percentile = "percentile"
-	PodName    = "PodName"
-	Count      = "Count"
-	Bytes      = "Bytes"
-	Seconds    = "Seconds"
-	Percent    = "Percent"
+	Core                     = "Core"
+	Device                   = "Device"
+	Percentile               = "percentile"
+	PodName                  = "PodName"
+	Count                    = "Count"
+	Bytes                    = "Bytes"
+	Seconds                  = "Seconds"
+	Percent                  = "Percent"
+	NeuronCoreAttributeKey   = "NeuronCore"
+	NeuronDeviceAttributeKey = "NeuronDevice"
 )
 
 type MetricModifier struct {
@@ -45,6 +47,7 @@ var (
 		containerinsightscommon.NeuronExecutionErrors:                       {DuplicationTypes: []string{containerinsightscommon.TypeNode}, AttributeKeysToBeRemoved: []string{ErrorType}, AggregationAttributeKey: ErrorType, LogTypeSuffix: "", Unit: Count},
 		containerinsightscommon.NeuronExecutionStatus:                       {DuplicationTypes: []string{containerinsightscommon.TypeNode}, AttributeKeysToBeRemoved: []string{StatusType}, AggregationAttributeKey: StatusType, LogTypeSuffix: "", Unit: Count},
 		containerinsightscommon.NeuronRuntimeMemoryUsage:                    {DuplicationTypes: []string{containerinsightscommon.TypeNode}, AttributeKeysToBeRemoved: []string{MemoryLocation}, AggregationAttributeKey: "", LogTypeSuffix: "", Unit: Bytes},
+		containerinsightscommon.NeuronCoreMemoryUtilizationTotal:            {DuplicationTypes: []string{containerinsightscommon.TypeContainer, containerinsightscommon.TypePod, containerinsightscommon.TypeNode}, AttributeKeysToBeRemoved: []string{MemoryLocation}, AggregationAttributeKey: "", LogTypeSuffix: Core, Unit: Bytes},
 		containerinsightscommon.NeuronCoreMemoryUtilizationConstants:        {DuplicationTypes: []string{containerinsightscommon.TypeContainer, containerinsightscommon.TypePod, containerinsightscommon.TypeNode}, AttributeKeysToBeRemoved: []string{MemoryLocation}, AggregationAttributeKey: "", LogTypeSuffix: Core, Unit: Bytes},
 		containerinsightscommon.NeuronCoreMemoryUtilizationModelCode:        {DuplicationTypes: []string{containerinsightscommon.TypeContainer, containerinsightscommon.TypePod, containerinsightscommon.TypeNode}, AttributeKeysToBeRemoved: []string{MemoryLocation}, AggregationAttributeKey: "", LogTypeSuffix: Core, Unit: Bytes},
 		containerinsightscommon.NeuronCoreMemoryUtilizationSharedScratchpad: {DuplicationTypes: []string{containerinsightscommon.TypeContainer, containerinsightscommon.TypePod, containerinsightscommon.TypeNode}, AttributeKeysToBeRemoved: []string{MemoryLocation}, AggregationAttributeKey: "", LogTypeSuffix: Core, Unit: Bytes},
@@ -56,7 +59,7 @@ var (
 		containerinsightscommon.NeuronExecutionLatency:                      {DuplicationTypes: []string{containerinsightscommon.TypeNode}, AttributeKeysToBeRemoved: []string{Percentile}, AggregationAttributeKey: "", LogTypeSuffix: "", Unit: Seconds},
 		containerinsightscommon.NeuronDeviceHardwareEccEvents:               {DuplicationTypes: []string{containerinsightscommon.TypeContainer, containerinsightscommon.TypePod, containerinsightscommon.TypeNode}, AttributeKeysToBeRemoved: []string{EventType}, AggregationAttributeKey: EventType, LogTypeSuffix: Device, Unit: Count},
 	}
-	attributeValuePrefixingMap = map[string]string{"NeuronCore": "core", "NeuronDevice": "device"}
+	attributeValuePrefixingMap = map[string]string{NeuronCoreAttributeKey: "core", NeuronDeviceAttributeKey: "device"}
 )
 
 func NewMetricModifier(logger *zap.Logger) *MetricModifier {
@@ -214,6 +217,7 @@ func convertGaugeToSum(originalMetric pmetric.Metric) pmetric.Metric {
 	convertedMetric.SetName(originalMetric.Name())
 	convertedMetric.SetUnit(originalMetric.Unit())
 	convertedMetric.SetEmptySum()
+	// comment on temporailty
 	originalMetric.Gauge().DataPoints().CopyTo(convertedMetric.Sum().DataPoints())
 	return convertedMetric
 }

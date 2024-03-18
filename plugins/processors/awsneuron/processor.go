@@ -19,20 +19,22 @@ const (
 
 type awsneuronprocessor struct {
 	*Config
-	logger         *zap.Logger
-	cancelFunc     context.CancelFunc
-	shutdownC      chan bool
-	started        bool
-	metricModifier *internal.MetricModifier
+	logger                 *zap.Logger
+	cancelFunc             context.CancelFunc
+	shutdownC              chan bool
+	started                bool
+	metricModifier         *internal.MetricModifier
+	memoryMetricAggregator *internal.MemoryMetricAggregator
 }
 
 func newAwsNeuronProcessor(config *Config, logger *zap.Logger) *awsneuronprocessor {
 	_, cancel := context.WithCancel(context.Background())
 	d := &awsneuronprocessor{
-		Config:         config,
-		logger:         logger,
-		cancelFunc:     cancel,
-		metricModifier: internal.NewMetricModifier(logger),
+		Config:                 config,
+		logger:                 logger,
+		cancelFunc:             cancel,
+		metricModifier:         internal.NewMetricModifier(logger),
+		memoryMetricAggregator: internal.NewMemoryMemoryAggregator(),
 	}
 	return d
 }
@@ -58,8 +60,11 @@ func (d *awsneuronprocessor) processMetrics(ctx context.Context, md pmetric.Metr
 				if strings.Contains(m.Name(), "neuron") || strings.Contains(m.Name(), "Neuron") {
 					isNeuronMetrics = true
 				}
+				d.memoryMetricAggregator.AggregateMemoryMetric(m)
 				d.metricModifier.ModifyMetric(m).MoveAndAppendTo(newMetrics)
 			}
+			aggregatedMemoryMetric := d.memoryMetricAggregator.FlushAggregatedMemoryMetric()
+			d.metricModifier.ModifyMetric(aggregatedMemoryMetric).MoveAndAppendTo(newMetrics)
 			newMetrics.CopyTo(metrics)
 		}
 	}
