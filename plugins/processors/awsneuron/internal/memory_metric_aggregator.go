@@ -1,3 +1,6 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: MIT
+
 package internal
 
 import (
@@ -36,23 +39,28 @@ func NewMemoryMemoryAggregator() *MemoryMetricAggregator {
 
 func (d *MemoryMetricAggregator) AggregateMemoryMetric(originalMetric pmetric.Metric) {
 	if _, exists := memoryMetricsNames[originalMetric.Name()]; exists {
-		d.MemoryMetricsFound = true
 		datapoints := originalMetric.Gauge().DataPoints()
-		d.aggregatedMemoryMetricAttributes = datapoints.At(0).Attributes()
-		d.metricTimestamp = datapoints.At(0).Timestamp()
+		if datapoints.Len() > 0 {
+			d.MemoryMetricsFound = true
+			d.aggregatedMemoryMetricAttributes = datapoints.At(0).Attributes()
+			d.metricTimestamp = datapoints.At(0).Timestamp()
 
-		for i := 0; i < datapoints.Len(); i++ {
-			datapoint := datapoints.At(i)
+			for i := 0; i < datapoints.Len(); i++ {
+				datapoint := datapoints.At(i)
 
-			neuronCoreIndexValue, _ := datapoint.Attributes().Get(NeuronCoreAttributeKey)
-			neuronDeviceIndexValue, _ := datapoint.Attributes().Get(NeuronDeviceAttributeKey)
-			neuronCoreInfo := NeuronCoreInfo{neuronCoreIndex: neuronCoreIndexValue.AsString(), neuronDeviceIndex: neuronDeviceIndexValue.AsString()}
+				neuronCoreIndexValue, neuronCoreIndexValueExists := datapoint.Attributes().Get(NeuronCoreAttributeKey)
+				neuronDeviceIndexValue, neuronDeviceIndexValueExists := datapoint.Attributes().Get(NeuronDeviceAttributeKey)
 
-			currentValue, exists := d.memoryMetricValuesAggregator[neuronCoreInfo]
-			if exists {
-				d.memoryMetricValuesAggregator[neuronCoreInfo] = currentValue + datapoint.DoubleValue()
-			} else {
-				d.memoryMetricValuesAggregator[neuronCoreInfo] = datapoint.DoubleValue()
+				if neuronCoreIndexValueExists && neuronDeviceIndexValueExists {
+					neuronCoreInfo := NeuronCoreInfo{neuronCoreIndex: neuronCoreIndexValue.AsString(), neuronDeviceIndex: neuronDeviceIndexValue.AsString()}
+
+					currentValue, exists := d.memoryMetricValuesAggregator[neuronCoreInfo]
+					if exists {
+						d.memoryMetricValuesAggregator[neuronCoreInfo] = currentValue + datapoint.DoubleValue()
+					} else {
+						d.memoryMetricValuesAggregator[neuronCoreInfo] = datapoint.DoubleValue()
+					}
+				}
 			}
 		}
 	}
