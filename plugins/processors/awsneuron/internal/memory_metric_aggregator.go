@@ -28,7 +28,7 @@ func NewMemoryMemoryAggregator() *MemoryMetricAggregator {
 
 func (d *MemoryMetricAggregator) AggregateMemoryMetric(originalMetric pmetric.Metric) {
 	if strings.Contains(originalMetric.Name(), NeuronCoreMemoryUsagePrefix) {
-		datapoints := originalMetric.Sum().DataPoints()
+		datapoints := originalMetric.Gauge().DataPoints()
 		d.aggregatedMemoryMetricAttributes = datapoints.At(0).Attributes()
 		d.metricTimestamp = datapoints.At(0).Timestamp()
 
