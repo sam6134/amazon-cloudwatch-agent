@@ -4,12 +4,19 @@ import (
 	"github.com/aws/amazon-cloudwatch-agent/internal/containerinsightscommon"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/pmetric"
-	"strings"
 )
 
 const (
 	NeuronCoreMemoryUsagePrefix = "neuroncore_memory_usage"
 )
+
+var memoryMetricsNames = map[string]struct{}{
+	containerinsightscommon.NeuronCoreMemoryUtilizationConstants:        {},
+	containerinsightscommon.NeuronCoreMemoryUtilizationModelCode:        {},
+	containerinsightscommon.NeuronCoreMemoryUtilizationSharedScratchpad: {},
+	containerinsightscommon.NeuronCoreMemoryUtilizationRuntimeMemory:    {},
+	containerinsightscommon.NeuronCoreMemoryUtilizationTensors:          {},
+}
 
 type NeuronCoreInfo struct {
 	neuronCoreIndex   string
@@ -28,7 +35,7 @@ func NewMemoryMemoryAggregator() *MemoryMetricAggregator {
 }
 
 func (d *MemoryMetricAggregator) AggregateMemoryMetric(originalMetric pmetric.Metric) {
-	if strings.Contains(originalMetric.Name(), NeuronCoreMemoryUsagePrefix) {
+	if _, exists := memoryMetricsNames[originalMetric.Name()]; exists {
 		d.MemoryMetricsFound = true
 		datapoints := originalMetric.Gauge().DataPoints()
 		d.aggregatedMemoryMetricAttributes = datapoints.At(0).Attributes()
