@@ -13,10 +13,6 @@ import (
 	"strings"
 )
 
-const (
-	awsNeuronMetric = "neuron_"
-)
-
 type awsneuronprocessor struct {
 	*Config
 	logger                 *zap.Logger
@@ -69,7 +65,6 @@ func (d *awsneuronprocessor) processMetrics(ctx context.Context, md pmetric.Metr
 				d.logMetricSlice(slice, "AggregatedMemoryMetric")
 				slice.MoveAndAppendTo(newMetrics)
 			}
-
 			newMetrics.CopyTo(metrics)
 		}
 	}
