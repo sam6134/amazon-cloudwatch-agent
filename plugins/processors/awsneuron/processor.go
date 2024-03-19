@@ -76,7 +76,7 @@ func (d *awsneuronprocessor) processMetrics(ctx context.Context, md pmetric.Metr
 
 	if isNeuronMetrics {
 		d.logMd(originalMd, "ORIGINAL_NEURON_METRICS")
-		d.logMd(originalMd, "MODIFIED_NEURON_METRICS")
+		d.logMd(md, "MODIFIED_NEURON_METRICS")
 	}
 	return md, nil
 }
