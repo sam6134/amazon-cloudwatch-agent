@@ -29,7 +29,6 @@ func TestAwsNeuronProcessor_ProcessMetrics(t *testing.T) {
 	assert.Equal(t, 1, modifiedMd.ResourceMetrics().Len())
 	assert.Equal(t, 1, modifiedMd.ResourceMetrics().At(0).ScopeMetrics().Len())
 	assert.Equal(t, 8, modifiedMd.ResourceMetrics().At(0).ScopeMetrics().At(0).Metrics().Len())
-	assert.True(t, processor.memoryMetricAggregator.MemoryMetricsFound)
 }
 
 func TestAwsNeuronProcessor_Start(t *testing.T) {

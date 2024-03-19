@@ -9,10 +9,6 @@ import (
 	"go.opentelemetry.io/collector/pdata/pmetric"
 )
 
-const (
-	NeuronCoreMemoryUsagePrefix = "neuroncore_memory_usage"
-)
-
 var memoryMetricsNames = map[string]struct{}{
 	containerinsightscommon.NeuronCoreMemoryUtilizationConstants:        {},
 	containerinsightscommon.NeuronCoreMemoryUtilizationModelCode:        {},

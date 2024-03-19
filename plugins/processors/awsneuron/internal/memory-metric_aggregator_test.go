@@ -88,10 +88,10 @@ func TestMemoryMetricAggregator_FlushAggregatedMemoryMetric(t *testing.T) {
 		actualNeuronCoreIndex, _ := datapoint.Attributes().Get(NeuronCoreAttributeKey)
 		actualNeuronDeviceIndex, _ := datapoint.Attributes().Get(NeuronDeviceAttributeKey)
 
+		assert.Equal(t, memoryUsageMetricValuesMap[actualNeuronCoreIndex.AsString()], datapoint.DoubleValue())
 		assert.NotEqual(t, "9", actualNeuronCoreIndex.AsString())
 		assert.NotEqual(t, "9", actualNeuronDeviceIndex.AsString())
 	}
-	// Assert other conditions as needed
 }
 
 func createSampleMetric(metricName string) pmetric.Metric {

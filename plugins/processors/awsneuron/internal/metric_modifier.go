@@ -133,9 +133,11 @@ func (md *MetricModifier) createAggregatedSumMetrics(originalMetric pmetric.Metr
 			subtypeValue, _ := originalDatapoint.Attributes().Get(aggregationAttributeKey)
 			newNameMetric.SetName(originalMetric.Name() + "_" + subtypeValue.Str())
 			newNameMetric.SetUnit(originalMetric.Unit())
+			// setting value of temporality to cumulative so that agent performs delta conversion on this metric
 			newNameMetric.Sum().SetAggregationTemporality(pmetric.AggregationTemporalityCumulative)
 		}
 		aggregatedMetric.Sum().DataPoints().At(0).SetDoubleValue(aggregatedValue)
+		// setting value of temporality to cumulative so that agent performs delta conversion on this metric
 		aggregatedMetric.Sum().SetAggregationTemporality(pmetric.AggregationTemporalityCumulative)
 	} else {
 		originalMetric.CopyTo(newMetricSlice.AppendEmpty())
@@ -238,8 +240,10 @@ func convertGaugeToSum(originalMetric pmetric.Metric) pmetric.Metric {
 	convertedMetric.SetName(originalMetric.Name())
 	convertedMetric.SetUnit(originalMetric.Unit())
 	convertedMetric.SetEmptySum()
-	// comment on temporailty
 	originalMetric.Gauge().DataPoints().CopyTo(convertedMetric.Sum().DataPoints())
+
+	// default value of temporality is undefined so even after conversion from gauge to sum
+	// the agent won't take delta.
 	return convertedMetric
 }
 
