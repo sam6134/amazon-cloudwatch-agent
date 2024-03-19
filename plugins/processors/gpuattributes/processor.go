@@ -6,6 +6,8 @@ package gpuattributes
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"github.com/aws/amazon-cloudwatch-agent/plugins/processors/gpuattributes/internal"
 	"strings"
 
 	"go.opentelemetry.io/collector/pdata/pcommon"
@@ -106,18 +108,25 @@ var nodeLabelFilter = map[string]map[string]interface{}{
 
 type gpuAttributesProcessor struct {
 	*Config
-	logger *zap.Logger
+	logger                          *zap.Logger
+	awsNeuronMetricModifier         *internal.AwsNeuronMetricModifier
+	awsNeuronMemoryMetricAggregator *internal.AwsNeuronMemoryMetricsAggregator
 }
 
 func newGpuAttributesProcessor(config *Config, logger *zap.Logger) *gpuAttributesProcessor {
 	d := &gpuAttributesProcessor{
-		Config: config,
-		logger: logger,
+		Config:                          config,
+		logger:                          logger,
+		awsNeuronMetricModifier:         internal.NewMetricModifier(logger),
+		awsNeuronMemoryMetricAggregator: internal.NewMemoryMemoryAggregator(),
 	}
 	return d
 }
 
 func (d *gpuAttributesProcessor) processMetrics(_ context.Context, md pmetric.Metrics) (pmetric.Metrics, error) {
+	isNeuronMetrics := false
+	originalMd := pmetric.NewMetrics()
+	md.CopyTo(originalMd)
 	rms := md.ResourceMetrics()
 	for i := 0; i < rms.Len(); i++ {
 		rs := rms.At(i)
@@ -125,16 +134,35 @@ func (d *gpuAttributesProcessor) processMetrics(_ context.Context, md pmetric.Me
 		for j := 0; j < ilms.Len(); j++ {
 			ils := ilms.At(j)
 			metrics := ils.Metrics()
+
+			newMetrics := pmetric.NewMetricSlice()
 			for k := 0; k < metrics.Len(); k++ {
 				m := metrics.At(k)
-				d.processMetricAttributes(m)
+				if strings.Contains(m.Name(), "neuron") || strings.Contains(m.Name(), "Neuron") {
+					isNeuronMetrics = true
+				}
+				d.processGPUMetricAttributes(m)
+				d.awsNeuronMemoryMetricAggregator.AggregateMemoryMetric(m)
+				// non neuron metric is returned as a singleton list
+				d.awsNeuronMetricModifier.ModifyMetric(m).MoveAndAppendTo(newMetrics)
 			}
+			if d.awsNeuronMemoryMetricAggregator.MemoryMetricsFound {
+				aggregatedMemoryMetric := d.awsNeuronMemoryMetricAggregator.FlushAggregatedMemoryMetric()
+				slice := d.awsNeuronMetricModifier.ModifyMetric(aggregatedMemoryMetric)
+				d.logMetricSlice(slice, "AggregatedMemoryMetric")
+				slice.MoveAndAppendTo(newMetrics)
+			}
+			newMetrics.CopyTo(metrics)
 		}
+	}
+	if isNeuronMetrics {
+		d.logMd(originalMd, "ORIGINAL_NEURON_METRICS")
+		d.logMd(md, "MODIFIED_NEURON_METRICS")
 	}
 	return md, nil
 }
 
-func (d *gpuAttributesProcessor) processMetricAttributes(m pmetric.Metric) {
+func (d *gpuAttributesProcessor) processGPUMetricAttributes(m pmetric.Metric) {
 	// only decorate GPU metrics
 	if !strings.Contains(m.Name(), gpuMetricIdentifier) {
 		return
@@ -205,4 +233,93 @@ func (d *gpuAttributesProcessor) filterAttributes(attributes pcommon.Map, labels
 			attributes.PutStr(lk, string(bytes))
 		}
 	}
+}
+
+func (d *gpuAttributesProcessor) logMd(md pmetric.Metrics, name string) {
+	var logMessage strings.Builder
+
+	logMessage.WriteString(fmt.Sprintf("\"%s_METRICS_MD\" : {\n", name))
+	rms := md.ResourceMetrics()
+	for i := 0; i < rms.Len(); i++ {
+		rs := rms.At(i)
+		ilms := rs.ScopeMetrics()
+		logMessage.WriteString(fmt.Sprintf("\t\"ResourceMetric_%d\": {\n", i))
+		for j := 0; j < ilms.Len(); j++ {
+			ils := ilms.At(j)
+			metrics := ils.Metrics()
+			logMessage.WriteString(fmt.Sprintf("\t\t\"ScopeMetric_%d\": {\n", j))
+			logMessage.WriteString(fmt.Sprintf("\t\t\"Metrics_%d\": [\n", j))
+
+			for k := 0; k < metrics.Len(); k++ {
+				m := metrics.At(k)
+				logMessage.WriteString(fmt.Sprintf("\t\t\t\"Metric_%d\": {\n", k))
+				logMessage.WriteString(fmt.Sprintf("\t\t\t\t\"name\": \"%s\",\n", m.Name()))
+
+				var datapoints pmetric.NumberDataPointSlice
+				switch m.Type() {
+				case pmetric.MetricTypeGauge:
+					datapoints = m.Gauge().DataPoints()
+				case pmetric.MetricTypeSum:
+					datapoints = m.Sum().DataPoints()
+				default:
+					datapoints = pmetric.NewNumberDataPointSlice()
+				}
+
+				logMessage.WriteString("\t\t\t\t\"datapoints\": [\n")
+				for yu := 0; yu < datapoints.Len(); yu++ {
+					logMessage.WriteString("\t\t\t\t\t{\n")
+					logMessage.WriteString(fmt.Sprintf("\t\t\t\t\t\t\"attributes\": \"%v\",\n", datapoints.At(yu).Attributes().AsRaw()))
+					logMessage.WriteString(fmt.Sprintf("\t\t\t\t\t\t\"value\": %v,\n", datapoints.At(yu).DoubleValue()))
+					logMessage.WriteString("\t\t\t\t\t},\n")
+				}
+				logMessage.WriteString("\t\t\t\t],\n")
+				logMessage.WriteString("\t\t\t},\n")
+			}
+			logMessage.WriteString("\t\t],\n")
+			logMessage.WriteString("\t\t},\n")
+		}
+		logMessage.WriteString("\t},\n")
+	}
+	logMessage.WriteString("},\n")
+
+	d.logger.Info(logMessage.String())
+}
+
+func (d *gpuAttributesProcessor) logMetricSlice(metrics pmetric.MetricSlice, name string) {
+
+	var logMessage strings.Builder
+
+	logMessage.WriteString(fmt.Sprintf("\"%s_METRICS_SLICE\" : {\n", name))
+
+	logMessage.WriteString(fmt.Sprintf("\t\t\"Metrics\": [\n"))
+
+	for k := 0; k < metrics.Len(); k++ {
+		m := metrics.At(k)
+		logMessage.WriteString(fmt.Sprintf("\t\t\t\"Metric_%d\": {\n", k))
+		logMessage.WriteString(fmt.Sprintf("\t\t\t\t\"name\": \"%s\",\n", m.Name()))
+		logMessage.WriteString(fmt.Sprintf("\t\t\t\t\"type\": \"%s\",\n", m.Type().String()))
+
+		var datapoints pmetric.NumberDataPointSlice
+		switch m.Type() {
+		case pmetric.MetricTypeGauge:
+			datapoints = m.Gauge().DataPoints()
+		case pmetric.MetricTypeSum:
+			datapoints = m.Sum().DataPoints()
+		default:
+			datapoints = pmetric.NewNumberDataPointSlice()
+		}
+
+		logMessage.WriteString("\t\t\t\t\"datapoints\": [\n")
+		for yu := 0; yu < datapoints.Len(); yu++ {
+			logMessage.WriteString("\t\t\t\t\t{\n")
+			logMessage.WriteString(fmt.Sprintf("\t\t\t\t\t\t\"attributes\": \"%v\",\n", datapoints.At(yu).Attributes().AsRaw()))
+			logMessage.WriteString(fmt.Sprintf("\t\t\t\t\t\t\"timestamp\": \"%v\",\n", datapoints.At(yu).Timestamp().String()))
+			logMessage.WriteString(fmt.Sprintf("\t\t\t\t\t\t\"value\": %v,\n", datapoints.At(yu).DoubleValue()))
+			logMessage.WriteString("\t\t\t\t\t},\n")
+		}
+		logMessage.WriteString("\t\t\t\t],\n")
+		logMessage.WriteString("\t\t\t},\n")
+	}
+	logMessage.WriteString("\t\t],\n")
+	d.logger.Info(logMessage.String())
 }
