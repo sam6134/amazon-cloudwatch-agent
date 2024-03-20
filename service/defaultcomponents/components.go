@@ -55,7 +55,6 @@ func Factories() (otelcol.Factories, error) {
 		resourcedetectionprocessor.NewFactory(),
 		transformprocessor.NewFactory(),
 		gpuattributes.NewFactory(),
-		//awsneuron.NewFactory(),
 	); err != nil {
 		return otelcol.Factories{}, err
 	}

@@ -387,6 +387,7 @@ exporters:
           - - ClusterName
             - GpuDevice
             - InstanceId
+            - InstanceType
             - NodeName
         label_matchers: []
         metric_name_selectors:
@@ -396,7 +397,6 @@ exporters:
           - node_gpu_memory_used
           - node_gpu_power_draw
           - node_gpu_temperature
-          - node_gpu_fan_speed
       - dimensions:
           - - ClusterName
             - InstanceId
@@ -973,7 +973,6 @@ receivers:
     enable_control_plane_metrics: true
     endpoint: ""
     accelerated_compute_metrics: true
-    aws_neuron_metrics: false
     imds_retries: 2
     leader_lock_name: cwagent-clusterleader
     leader_lock_using_config_map_only: true

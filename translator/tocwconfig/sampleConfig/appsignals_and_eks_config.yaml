@@ -319,6 +319,7 @@ processors:
           drop_threshold: 500
           log_dropped_metrics: true
           rotation_interval: 10m0s
+          garbage_collection_interval: 10m0s
     batch/containerinsights:
         metadata_cardinality_limit: 1000
         metadata_keys: []
@@ -634,7 +635,6 @@ receivers:
         role_arn: ""
         shared_credentials_file: []
         accelerated_compute_metrics: false
-        aws_neuron_metrics: false
     otlp/app_signals:
         protocols:
             grpc:
