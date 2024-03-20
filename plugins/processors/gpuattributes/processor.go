@@ -6,6 +6,7 @@ package gpuattributes
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/aws/amazon-cloudwatch-agent/plugins/processors/gpuattributes/internal"
 	"strings"
 
