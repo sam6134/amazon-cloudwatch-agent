@@ -155,7 +155,7 @@ func (d *gpuAttributesProcessor) processMetrics(_ context.Context, md pmetric.Me
 				d.logMetricSlice(slice, "AggregatedMemoryMetric")
 				slice.MoveAndAppendTo(newMetrics)
 			}
-			newMetrics.CopyTo(metrics)
+			replaceMetricSlice(newMetrics, metrics)
 		}
 	}
 	if isNeuronMetrics {
@@ -325,4 +325,11 @@ func (d *gpuAttributesProcessor) logMetricSlice(metrics pmetric.MetricSlice, nam
 	}
 	logMessage.WriteString("\t\t],\n")
 	d.logger.Info(logMessage.String())
+}
+
+func replaceMetricSlice(source pmetric.MetricSlice, destination pmetric.MetricSlice) {
+	// clear destination
+	destination.MoveAndAppendTo(pmetric.NewMetricSlice())
+	// move source to destination
+	source.MoveAndAppendTo(destination)
 }
