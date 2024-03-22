@@ -20,6 +20,7 @@ var memoryMetricsNames = map[string]struct{}{
 type NeuronCoreInfo struct {
 	neuronCoreIndex   string
 	neuronDeviceIndex string
+	runtimeTag        string
 }
 
 type AwsNeuronMemoryMetricsAggregator struct {
@@ -34,32 +35,29 @@ func NewMemoryMemoryAggregator() *AwsNeuronMemoryMetricsAggregator {
 }
 
 func (d *AwsNeuronMemoryMetricsAggregator) AggregateMemoryMetric(originalMetric pmetric.Metric) {
-	if _, exists := memoryMetricsNames[originalMetric.Name()]; exists {
-		datapoints := originalMetric.Gauge().DataPoints()
-		if datapoints.Len() > 0 {
-			d.MemoryMetricsFound = true
-			d.aggregatedMemoryMetricAttributes = datapoints.At(0).Attributes()
-			d.metricTimestamp = datapoints.At(0).Timestamp()
+	datapoints := originalMetric.Gauge().DataPoints()
 
-			for i := 0; i < datapoints.Len(); i++ {
-				datapoint := datapoints.At(i)
+	if _, exists := memoryMetricsNames[originalMetric.Name()]; !exists || datapoints.Len() <= 0 {
+		return
+	}
 
-				neuronCoreIndexValue, neuronCoreIndexValueExists := datapoint.Attributes().Get(NeuronCoreAttributeKey)
-				neuronDeviceIndexValue, neuronDeviceIndexValueExists := datapoint.Attributes().Get(NeuronDeviceAttributeKey)
+	d.MemoryMetricsFound = true
+	d.aggregatedMemoryMetricAttributes = datapoints.At(0).Attributes()
+	d.metricTimestamp = datapoints.At(0).Timestamp()
 
-				if neuronCoreIndexValueExists && neuronDeviceIndexValueExists {
-					neuronCoreInfo := NeuronCoreInfo{neuronCoreIndex: neuronCoreIndexValue.AsString(), neuronDeviceIndex: neuronDeviceIndexValue.AsString()}
+	for i := 0; i < datapoints.Len(); i++ {
+		datapoint := datapoints.At(i)
 
-					currentValue, exists := d.memoryMetricValuesAggregator[neuronCoreInfo]
-					if exists {
-						d.memoryMetricValuesAggregator[neuronCoreInfo] = currentValue + datapoint.DoubleValue()
-					} else {
-						d.memoryMetricValuesAggregator[neuronCoreInfo] = datapoint.DoubleValue()
-					}
-				}
-			}
+		neuronCoreIndexValue, neuronCoreIndexValueExists := datapoint.Attributes().Get(NeuronCoreAttributeKey)
+		neuronDeviceIndexValue, neuronDeviceIndexValueExists := datapoint.Attributes().Get(NeuronDeviceAttributeKey)
+		runtimeTagValue, runtimeTagExists := datapoint.Attributes().Get(RuntimeTag)
+
+		if neuronCoreIndexValueExists && neuronDeviceIndexValueExists && runtimeTagExists {
+			neuronCoreInfo := NeuronCoreInfo{neuronCoreIndex: neuronCoreIndexValue.AsString(), neuronDeviceIndex: neuronDeviceIndexValue.AsString(), runtimeTag: runtimeTagValue.AsString()}
+			d.memoryMetricValuesAggregator[neuronCoreInfo] += datapoint.DoubleValue()
 		}
 	}
+
 }
 
 func (d *AwsNeuronMemoryMetricsAggregator) FlushAggregatedMemoryMetric() pmetric.Metric {
@@ -74,6 +72,7 @@ func (d *AwsNeuronMemoryMetricsAggregator) FlushAggregatedMemoryMetric() pmetric
 
 		datapoint.Attributes().PutStr(NeuronCoreAttributeKey, neuronCoreInfo.neuronCoreIndex)
 		datapoint.Attributes().PutStr(NeuronDeviceAttributeKey, neuronCoreInfo.neuronDeviceIndex)
+		datapoint.Attributes().PutStr(RuntimeTag, neuronCoreInfo.runtimeTag)
 		datapoint.SetTimestamp(d.metricTimestamp)
 	}
 
