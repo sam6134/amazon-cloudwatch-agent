@@ -35,9 +35,13 @@ func NewMemoryMemoryAggregator() *AwsNeuronMemoryMetricsAggregator {
 }
 
 func (d *AwsNeuronMemoryMetricsAggregator) AggregateMemoryMetric(originalMetric pmetric.Metric) {
+	if _, exists := memoryMetricsNames[originalMetric.Name()]; !exists {
+		return
+	}
+
 	datapoints := originalMetric.Gauge().DataPoints()
 
-	if _, exists := memoryMetricsNames[originalMetric.Name()]; !exists || datapoints.Len() <= 0 {
+	if datapoints.Len() <= 0 {
 		return
 	}
 
