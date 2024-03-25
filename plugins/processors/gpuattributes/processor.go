@@ -8,13 +8,12 @@ import (
 	"encoding/json"
 	"strings"
 
+	"github.com/aws/amazon-cloudwatch-agent/internal/containerinsightscommon"
 	"github.com/aws/amazon-cloudwatch-agent/plugins/processors/gpuattributes/internal"
 
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/pmetric"
 	"go.uber.org/zap"
-
-	"github.com/aws/amazon-cloudwatch-agent/internal/containerinsightscommon"
 )
 
 const (
