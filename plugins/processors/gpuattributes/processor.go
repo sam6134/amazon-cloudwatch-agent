@@ -6,8 +6,9 @@ package gpuattributes
 import (
 	"context"
 	"encoding/json"
-	"github.com/aws/amazon-cloudwatch-agent/plugins/processors/gpuattributes/internal"
 	"strings"
+
+	"github.com/aws/amazon-cloudwatch-agent/plugins/processors/gpuattributes/internal"
 
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/pmetric"
