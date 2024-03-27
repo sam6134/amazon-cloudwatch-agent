@@ -138,8 +138,8 @@ func (d *gpuAttributesProcessor) processMetrics(_ context.Context, md pmetric.Me
 			ils := ilms.At(j)
 			metrics := ils.Metrics()
 
-			newMetrics := pmetric.NewMetricSlice()
-			for k := 0; k < metrics.Len(); k++ {
+			metricsLength := metrics.Len()
+			for k := 0; k < metricsLength; k++ {
 				m := metrics.At(k)
 				if strings.Contains(m.Name(), "neuron") || strings.Contains(m.Name(), "Neuron") {
 					isNeuronMetrics = true
@@ -147,15 +147,12 @@ func (d *gpuAttributesProcessor) processMetrics(_ context.Context, md pmetric.Me
 				d.processGPUMetricAttributes(m)
 				d.awsNeuronMemoryMetricAggregator.AggregateMemoryMetric(m)
 				// non neuron metric is returned as a singleton list
-				d.awsNeuronMetricModifier.ModifyMetric(m).MoveAndAppendTo(newMetrics)
+				d.awsNeuronMetricModifier.ModifyMetric(m, metrics)
 			}
 			if d.awsNeuronMemoryMetricAggregator.MemoryMetricsFound {
 				aggregatedMemoryMetric := d.awsNeuronMemoryMetricAggregator.FlushAggregatedMemoryMetric()
-				slice := d.awsNeuronMetricModifier.ModifyMetric(aggregatedMemoryMetric)
-				d.logMetricSlice(slice, "AggregatedMemoryMetric")
-				slice.MoveAndAppendTo(newMetrics)
+				d.awsNeuronMetricModifier.ModifyMetric(aggregatedMemoryMetric, metrics)
 			}
-			replaceMetricSlice(newMetrics, metrics)
 		}
 	}
 	if isNeuronMetrics {
@@ -325,11 +322,4 @@ func (d *gpuAttributesProcessor) logMetricSlice(metrics pmetric.MetricSlice, nam
 	}
 	logMessage.WriteString("\t\t],\n")
 	d.logger.Info(logMessage.String())
-}
-
-func replaceMetricSlice(source pmetric.MetricSlice, destination pmetric.MetricSlice) {
-	// clear destination
-	destination.MoveAndAppendTo(pmetric.NewMetricSlice())
-	// move source to destination
-	source.MoveAndAppendTo(destination)
 }
