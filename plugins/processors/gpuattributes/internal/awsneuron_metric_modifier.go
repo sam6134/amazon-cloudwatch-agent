@@ -88,12 +88,12 @@ var (
 	attributeValuePrefixingMap = map[string]string{NeuronCoreAttributeKey: "core", NeuronDeviceAttributeKey: "device"}
 
 	aggregationBucketNamesForUniqueDatapoints = map[string]map[string]string{
-		containerinsightscommon.NeuronExecutionErrors: {"generic": containerinsightscommon.NeuronExecutionErrors,
-			"numerical": containerinsightscommon.NeuronExecutionErrors,
-			"transient": containerinsightscommon.NeuronExecutionErrors,
-			"model":     containerinsightscommon.NeuronExecutionErrors,
-			"runtime":   containerinsightscommon.NeuronExecutionErrors,
-			"hardware":  containerinsightscommon.NeuronExecutionErrors},
+		containerinsightscommon.NeuronExecutionErrors: {"generic": NeuronExecutionErrorsAggregatedMetric,
+			"numerical": NeuronExecutionErrorsAggregatedMetric,
+			"transient": NeuronExecutionErrorsAggregatedMetric,
+			"model":     NeuronExecutionErrorsAggregatedMetric,
+			"runtime":   NeuronExecutionErrorsAggregatedMetric,
+			"hardware":  NeuronExecutionErrorsAggregatedMetric},
 		// execution_status metric will be added here incrementally
 		containerinsightscommon.NeuronDeviceHardwareEccEvents: {"mem_ecc_corrected": NeuronDeviceHardwareEccEventsAggregatedMetric,
 			"mem_ecc_uncorrected":  NeuronDeviceHardwareEccEventsAggregatedMetric,
