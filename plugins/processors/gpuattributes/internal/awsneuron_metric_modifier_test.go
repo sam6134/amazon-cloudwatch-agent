@@ -94,7 +94,7 @@ func TestMetricModifierForExecutionErrorMetric(t *testing.T) {
 		"node_neuron_execution_errors_model":     createExpectedMetric("node_neuron_execution_errors_model", true, []map[string]string{{Type: NodeAWSNeuron, RuntimeTag: "1"}}, []float64{4}, pmetric.MetricTypeSum, Count),
 		"node_neuron_execution_errors_runtime":   createExpectedMetric("node_neuron_execution_errors_runtime", true, []map[string]string{{Type: NodeAWSNeuron, RuntimeTag: "1"}}, []float64{5}, pmetric.MetricTypeSum, Count),
 		"node_neuron_execution_errors_hardware":  createExpectedMetric("node_neuron_execution_errors_hardware", true, []map[string]string{{Type: NodeAWSNeuron, RuntimeTag: "1"}}, []float64{6}, pmetric.MetricTypeSum, Count),
-		"node_neuron_execution_errors":           createExpectedMetric("node_neuron_execution_errors", true, []map[string]string{{Type: NodeAWSNeuron, RuntimeTag: "1"}}, []float64{21}, pmetric.MetricTypeSum, Count),
+		"node_neuron_execution_errors_total":     createExpectedMetric("node_neuron_execution_errors_total", true, []map[string]string{{Type: NodeAWSNeuron, RuntimeTag: "1"}}, []float64{21}, pmetric.MetricTypeSum, Count),
 	}
 
 	assertModifiedMetric(t, metricsList, expectedMetrics)
@@ -257,7 +257,7 @@ func TestListWithMultipleMetrics(t *testing.T) {
 		"node_neuron_execution_errors_model":     createExpectedMetric("node_neuron_execution_errors_model", true, []map[string]string{{Type: NodeAWSNeuron, RuntimeTag: "1"}}, []float64{4}, pmetric.MetricTypeSum, Count),
 		"node_neuron_execution_errors_runtime":   createExpectedMetric("node_neuron_execution_errors_runtime", true, []map[string]string{{Type: NodeAWSNeuron, RuntimeTag: "1"}}, []float64{5}, pmetric.MetricTypeSum, Count),
 		"node_neuron_execution_errors_hardware":  createExpectedMetric("node_neuron_execution_errors_hardware", true, []map[string]string{{Type: NodeAWSNeuron, RuntimeTag: "1"}}, []float64{6}, pmetric.MetricTypeSum, Count),
-		"node_neuron_execution_errors":           createExpectedMetric("node_neuron_execution_errors", true, []map[string]string{{Type: NodeAWSNeuron, RuntimeTag: "1"}}, []float64{21}, pmetric.MetricTypeSum, Count),
+		"node_neuron_execution_errors_total":     createExpectedMetric("node_neuron_execution_errors_total", true, []map[string]string{{Type: NodeAWSNeuron, RuntimeTag: "1"}}, []float64{21}, pmetric.MetricTypeSum, Count),
 
 		"node_neuron_execution_status_completed":              createExpectedMetric("node_neuron_execution_status_completed", true, []map[string]string{{Type: NodeAWSNeuron, RuntimeTag: "1"}}, []float64{1}, pmetric.MetricTypeSum, Count),
 		"node_neuron_execution_status_completed_with_err":     createExpectedMetric("node_neuron_execution_status_completed_with_err", true, []map[string]string{{Type: NodeAWSNeuron, RuntimeTag: "1"}}, []float64{2}, pmetric.MetricTypeSum, Count),
