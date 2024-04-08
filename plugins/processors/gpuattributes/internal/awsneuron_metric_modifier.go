@@ -298,6 +298,9 @@ func prefixCoreAndDeviceLabels(originalMetric pmetric.Metric) {
 	dps := originalMetric.Sum().DataPoints()
 	for i := 0; i < dps.Len(); i++ {
 		dp := dps.At(i)
+		if dp.ValueType() == pmetric.NumberDataPointValueTypeEmpty {
+			dp.SetDoubleValue(0)
+		}
 		for attributeKey, attributeValuePrefix := range attributeValuePrefixingMap {
 			if value, exists := dp.Attributes().Get(attributeKey); exists {
 				dp.Attributes().PutStr(attributeKey, attributeValuePrefix+value.Str())
