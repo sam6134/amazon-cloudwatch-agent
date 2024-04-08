@@ -14,12 +14,11 @@ import (
 )
 
 const (
-	aggregatedMetricSuffix = "_total"
-	ErrorType              = "error_type"
-	StatusType             = "status_type"
-	EventType              = "event_type"
-	logTypeSuffix          = "AWSNeuron"
-	MemoryLocation         = "memory_location"
+	ErrorType      = "error_type"
+	StatusType     = "status_type"
+	EventType      = "event_type"
+	logTypeSuffix  = "AWSNeuron"
+	MemoryLocation = "memory_location"
 
 	Core                                          = "Core"
 	Device                                        = "Device"
@@ -87,7 +86,7 @@ var (
 	}
 	attributeValuePrefixingMap = map[string]string{NeuronCoreAttributeKey: "core", NeuronDeviceAttributeKey: "device"}
 
-	aggregationBucketNamesForUniqueDatapoints = map[string]map[string]string{
+	uniquesDatapointsToAggregatedMetricMappings = map[string]map[string]string{
 		containerinsightscommon.NeuronExecutionErrors: {"generic": NeuronExecutionErrorsAggregatedMetric,
 			"numerical": NeuronExecutionErrorsAggregatedMetric,
 			"transient": NeuronExecutionErrorsAggregatedMetric,
@@ -193,6 +192,7 @@ func keepSpecificDatapointBasedOnAttribute(originalMetric pmetric.Metric, attrib
 // It also creates a new metric for each datapoint based on the unique target attribute.
 // example :
 // in: unique_target_attribute = error_type
+// and error_type: A,B,C need to be aggregated in neuron_execution_errors_total metric then
 //
 //	neuron_execution_errors {
 //	  datapoints : [
@@ -228,14 +228,16 @@ func (md *AwsNeuronMetricModifier) extractDatapointsAsMetricsAndAggregate(origin
 	}
 
 	originalMetricDatapoints := originalMetric.Sum().DataPoints()
+
 	aggregatedValuesPerRuntimeTag := map[MetricDatapointAggregationKey]float64{}
-	uniqueAttributeToAggregatedMetricMappings, needsAggregation := aggregationBucketNamesForUniqueDatapoints[originalMetric.Name()]
+	uniqueAttributeToAggregatedMetricMappings, needsAggregation := uniquesDatapointsToAggregatedMetricMappings[originalMetric.Name()]
 	for i := 0; i < originalMetricDatapoints.Len(); i++ {
 		originalDatapoint := originalMetricDatapoints.At(i)
 		runtimeTag, _ := originalDatapoint.Attributes().Get(RuntimeTag)
 		deviceId, _ := originalDatapoint.Attributes().Get(NeuronDeviceAttributeKey)
 		uniqueAttributeValue, _ := originalDatapoint.Attributes().Get(uniqueAttribute)
 
+		// only add to the aggregation map if the datapoint to aggregated metric mappings are defined for the original metric
 		if needsAggregation {
 			aggregatedMetricName := uniqueAttributeToAggregatedMetricMappings[uniqueAttributeValue.Str()]
 			aggregatedValuesPerRuntimeTag[MetricDatapointAggregationKey{runtimeTag: runtimeTag.Str(), aggregatedMetricName: aggregatedMetricName, deviceId: deviceId.Str()}] += originalDatapoint.DoubleValue()
