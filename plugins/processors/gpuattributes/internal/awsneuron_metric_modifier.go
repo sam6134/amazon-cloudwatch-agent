@@ -144,6 +144,7 @@ func (md *AwsNeuronMetricModifier) ModifyMetric(originalMetric pmetric.Metric, m
 	// Neuron metrics sent by the neuron monitor don't have any units so we add them in the agent.
 	addUnit(originalMetric)
 	prefixCoreAndDeviceLabels(originalMetric)
+	resetStaleDatapoints(originalMetric)
 
 	originalMetricName := originalMetric.Name()
 	// The neuron metrics sent by the neuron monitor are not homogeneous
