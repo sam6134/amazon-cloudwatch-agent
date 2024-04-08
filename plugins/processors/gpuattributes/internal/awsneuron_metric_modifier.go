@@ -356,7 +356,7 @@ func resetStaleDatapoints(originalMetric pmetric.Metric) {
 		if dp.ValueType() == pmetric.NumberDataPointValueTypeEmpty {
 			dp.SetDoubleValue(0)
 			dp.Attributes().PutStr(RuntimeTag, "default")
-			dp.Flags().WithNoRecordedValue(false)
+			dp.SetFlags(dp.Flags().WithNoRecordedValue(false))
 		}
 	}
 }
