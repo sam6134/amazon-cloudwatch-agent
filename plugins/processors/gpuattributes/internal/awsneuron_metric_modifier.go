@@ -139,7 +139,7 @@ func (md *AwsNeuronMetricModifier) ModifyMetric(originalMetric pmetric.Metric, m
 	// Since the otel to grouped metrics conversions takes type into account,
 	// thus we need to convert all metrics to the same type so that they are grouped together.
 	if originalMetric.Type() == pmetric.MetricTypeGauge {
-		originalMetric = convertGaugeToSum(originalMetric)
+		convertGaugeToSum(originalMetric)
 	}
 	// Neuron metrics sent by the neuron monitor don't have any units so we add them in the agent.
 	addUnit(originalMetric)
@@ -161,14 +161,13 @@ func (md *AwsNeuronMetricModifier) ModifyMetric(originalMetric pmetric.Metric, m
 	md.duplicateMetrics(modifiedMetricSlice, originalMetricName, originalMetric.Sum().DataPoints(), metrics)
 }
 
-func convertGaugeToSum(originalMetric pmetric.Metric) pmetric.Metric {
-	convertedMetric := setMetricMetadata(pmetric.NewMetric(), originalMetric.Name(), originalMetric.Unit())
-	convertedMetric.SetEmptySum()
-	originalMetric.Gauge().DataPoints().CopyTo(convertedMetric.Sum().DataPoints())
+func convertGaugeToSum(originalMetric pmetric.Metric) {
+	datapoints := originalMetric.Gauge().DataPoints()
+	originalMetric.SetEmptySum()
+	datapoints.MoveAndAppendTo(originalMetric.Sum().DataPoints())
 
 	// default value of temporality is undefined so even after conversion from gauge to sum
 	// the agent won't take delta.
-	return convertedMetric
 }
 
 func addUnit(originalMetric pmetric.Metric) {
@@ -350,12 +349,16 @@ func setMetricMetadata(metric pmetric.Metric, name string, unit string) pmetric.
 	return metric
 }
 
+// This method updates the stale or nan datapoints so that they report the default value of 0 instead. This is needed so that we can see the default values instead of a gap.
+// - return the assigned value converted to a double if possible, else 0
+// - set the runtime tag to default since the runtime associated no longer exists
+// - reset the NoRecordedValue flag so that the metric is not dropped
 func resetStaleDatapoints(originalMetric pmetric.Metric) {
 	dps := originalMetric.Sum().DataPoints()
 	for i := 0; i < dps.Len(); i++ {
 		dp := dps.At(i)
-		if dp.ValueType() == pmetric.NumberDataPointValueTypeEmpty {
-			dp.SetDoubleValue(0)
+		if dp.ValueType() == pmetric.NumberDataPointValueTypeEmpty || dp.Flags().NoRecordedValue() {
+			dp.SetDoubleValue(dp.DoubleValue())
 			dp.Attributes().PutStr(RuntimeTag, "default")
 			dp.SetFlags(dp.Flags().WithNoRecordedValue(false))
 		}
