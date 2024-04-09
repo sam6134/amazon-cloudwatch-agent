@@ -54,6 +54,7 @@ func (t *translator) Translate(conf *confmap.Conf) (component.Config, error) {
 	if awscontainerinsight.AcceleratedComputeMetricsEnabled(conf) {
 		includeMetrics := []string{
 			"node_neuron_execution_errors*",
+			"node_neuron_execution_status*",
 		}
 		cfg.Include.Metrics = includeMetrics
 		cfg.Include.MatchType = regexp
