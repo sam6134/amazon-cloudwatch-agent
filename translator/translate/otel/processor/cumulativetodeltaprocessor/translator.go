@@ -4,7 +4,6 @@
 package cumulativetodeltaprocessor
 
 import (
-	"fmt"
 	"github.com/aws/amazon-cloudwatch-agent/internal/containerinsightscommon"
 	"github.com/aws/amazon-cloudwatch-agent/translator/translate/otel/receiver/awscontainerinsight"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/cumulativetodeltaprocessor"
@@ -49,10 +48,9 @@ func (t *translator) ID() component.ID {
 // Translate creates a processor config based on the fields in the
 // Metrics section of the JSON config.
 func (t *translator) Translate(conf *confmap.Conf) (component.Config, error) {
-	if conf == nil || (!conf.IsSet(diskioKey) && !conf.IsSet(netKey)) {
-		return nil, &common.MissingKeyError{ID: t.ID(), JsonKey: fmt.Sprint(diskioKey, " or ", netKey)}
-	}
-
+	//if conf == nil || (!conf.IsSet(diskioKey) && !conf.IsSet(netKey)) {
+	//	return nil, &common.MissingKeyError{ID: t.ID(), JsonKey: fmt.Sprint(diskioKey, " or ", netKey)}
+	//}
 	cfg := t.factory.CreateDefaultConfig().(*cumulativetodeltaprocessor.Config)
 	if awscontainerinsight.AcceleratedComputeMetricsEnabled(conf) {
 		includeMetrics := []string{
