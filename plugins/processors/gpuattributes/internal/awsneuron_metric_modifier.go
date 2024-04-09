@@ -247,6 +247,7 @@ func (md *AwsNeuronMetricModifier) extractDatapointsAsMetricsAndAggregate(origin
 		originalDatapoint.CopyTo(newNameMetric.SetEmptySum().DataPoints().AppendEmpty())
 		// setting value of temporality to cumulative so that agent performs delta conversion on this metric
 		newNameMetric.Sum().SetAggregationTemporality(pmetric.AggregationTemporalityCumulative)
+		newNameMetric.Sum().SetIsMonotonic(true)
 	}
 
 	// Creating body for the aggregated metric and add it to the new newMetricSlice for each runtime
@@ -264,6 +265,7 @@ func (md *AwsNeuronMetricModifier) extractDatapointsAsMetricsAndAggregate(origin
 
 		// setting value of temporality to cumulative so that agent performs delta conversion on this metric
 		aggregatedMetric.Sum().SetAggregationTemporality(pmetric.AggregationTemporalityCumulative)
+		aggregatedMetric.Sum().SetIsMonotonic(true)
 	}
 
 	return newMetricSlice

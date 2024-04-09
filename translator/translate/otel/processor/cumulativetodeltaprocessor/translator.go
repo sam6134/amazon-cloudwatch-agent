@@ -5,7 +5,8 @@ package cumulativetodeltaprocessor
 
 import (
 	"fmt"
-
+	"github.com/aws/amazon-cloudwatch-agent/internal/containerinsightscommon"
+	"github.com/aws/amazon-cloudwatch-agent/translator/translate/otel/receiver/awscontainerinsight"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/cumulativetodeltaprocessor"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/confmap"
@@ -18,6 +19,7 @@ const (
 	// Match types are in internal package from contrib
 	// Strict is the FilterType for filtering by exact string matches.
 	strict = "strict"
+	regexp = "regexp"
 )
 
 var (
@@ -52,6 +54,15 @@ func (t *translator) Translate(conf *confmap.Conf) (component.Config, error) {
 	}
 
 	cfg := t.factory.CreateDefaultConfig().(*cumulativetodeltaprocessor.Config)
+	if awscontainerinsight.AcceleratedComputeMetricsEnabled(conf) {
+		includeMetrics := []string{
+			"*" + containerinsightscommon.NeuronExecutionErrors + "*",
+			"*" + containerinsightscommon.NeuronExecutionStatus + "*",
+			"*" + containerinsightscommon.NeuronDeviceHardwareEccEvents + "*",
+		}
+		cfg.Include.Metrics = includeMetrics
+		cfg.Include.MatchType = regexp
+	}
 
 	excludeMetrics := t.getExcludeNetAndDiskIOMetrics(conf)
 

@@ -392,6 +392,7 @@ func createExpectedMetric(name string, isCumulative bool, attributes []map[strin
 
 	if isCumulative {
 		metric.Sum().SetAggregationTemporality(pmetric.AggregationTemporalityCumulative)
+		metric.Sum().SetIsMonotonic(true)
 	}
 
 	for i := 0; i < len(values); i++ {
