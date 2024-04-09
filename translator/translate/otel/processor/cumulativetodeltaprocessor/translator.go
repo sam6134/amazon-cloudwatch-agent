@@ -53,7 +53,7 @@ func (t *translator) Translate(conf *confmap.Conf) (component.Config, error) {
 	cfg := t.factory.CreateDefaultConfig().(*cumulativetodeltaprocessor.Config)
 	if awscontainerinsight.AcceleratedComputeMetricsEnabled(conf) {
 		includeMetrics := []string{
-			"*neuron_execution_errors*",
+			"node_neuron_execution_errors*",
 		}
 		cfg.Include.Metrics = includeMetrics
 		cfg.Include.MatchType = regexp
