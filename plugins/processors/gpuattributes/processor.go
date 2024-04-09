@@ -156,7 +156,7 @@ func (d *gpuAttributesProcessor) processMetrics(_ context.Context, md pmetric.Me
 		}
 	}
 	if isNeuronMetrics {
-		d.logMd(originalMd, "ORIGINAL_NEURON_METRICS")
+		//d.logMd(originalMd, "ORIGINAL_NEURON_METRICS")
 		d.logMd(md, "MODIFIED_NEURON_METRICS")
 	}
 	return md, nil
