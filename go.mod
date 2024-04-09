@@ -14,7 +14,10 @@ replace (
 
 // replace github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awsemfexporter => github.com/amazon-contributing/opentelemetry-collector-contrib/exporter/awsemfexporter v0.0.0-20231221155153-92710a714293
 replace github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awsemfexporter => ../opentelemetry-collector-contrib/exporter/awsemfexporter
+
 replace github.com/open-telemetry/opentelemetry-collector-contrib/processor/cumulativetodeltaprocessor => ../opentelemetry-collector-contrib/processor/cumulativetodeltaprocessor
+
+replace github.com/open-telemetry/opentelemetry-collector-contrib/processor/deltatosparseprocessor => ../opentelemetry-collector-contrib/processor/deltatosparseprocessor
 
 // replace github.com/open-telemetry/opentelemetry-collector-contrib/receiver/awscontainerinsightreceiver => github.com/amazon-contributing/opentelemetry-collector-contrib/receiver/awscontainerinsightreceiver v0.0.0-20231221155153-92710a714293
 replace github.com/open-telemetry/opentelemetry-collector-contrib/receiver/awscontainerinsightreceiver => ../opentelemetry-collector-contrib/receiver/awscontainerinsightreceiver
@@ -179,6 +182,8 @@ require (
 	k8s.io/client-go v0.28.3
 	k8s.io/klog/v2 v2.100.1
 )
+
+require github.com/open-telemetry/opentelemetry-collector-contrib/processor/deltatosparseprocessor v0.0.0-00010101000000-000000000000
 
 require (
 	cloud.google.com/go/compute v1.23.2 // indirect
