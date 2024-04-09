@@ -4,7 +4,6 @@
 package cumulativetodeltaprocessor
 
 import (
-	"github.com/aws/amazon-cloudwatch-agent/internal/containerinsightscommon"
 	"github.com/aws/amazon-cloudwatch-agent/translator/translate/otel/receiver/awscontainerinsight"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/cumulativetodeltaprocessor"
 	"go.opentelemetry.io/collector/component"
@@ -54,9 +53,7 @@ func (t *translator) Translate(conf *confmap.Conf) (component.Config, error) {
 	cfg := t.factory.CreateDefaultConfig().(*cumulativetodeltaprocessor.Config)
 	if awscontainerinsight.AcceleratedComputeMetricsEnabled(conf) {
 		includeMetrics := []string{
-			"*" + containerinsightscommon.NeuronExecutionErrors + "*",
-			"*" + containerinsightscommon.NeuronExecutionStatus + "*",
-			"*" + containerinsightscommon.NeuronDeviceHardwareEccEvents + "*",
+			"*neuron_execution_errors*",
 		}
 		cfg.Include.Metrics = includeMetrics
 		cfg.Include.MatchType = regexp
