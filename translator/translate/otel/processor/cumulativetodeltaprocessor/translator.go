@@ -59,12 +59,12 @@ func (t *translator) Translate(conf *confmap.Conf) (component.Config, error) {
 		cfg.Include.MatchType = regexp
 	}
 
-	excludeMetrics := t.getExcludeNetAndDiskIOMetrics(conf)
+	//excludeMetrics := t.getExcludeNetAndDiskIOMetrics(conf)
 
-	if len(excludeMetrics) != 0 {
-		cfg.Exclude.MatchType = strict
-		cfg.Exclude.Metrics = excludeMetrics
-	}
+	//if len(excludeMetrics) != 0 {
+	//	cfg.Exclude.MatchType = strict
+	//	cfg.Exclude.Metrics = excludeMetrics
+	//}
 	return cfg, nil
 }
 
