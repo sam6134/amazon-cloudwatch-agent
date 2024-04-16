@@ -53,11 +53,25 @@ func (t *translator) Translate(conf *confmap.Conf) (component.Config, error) {
 	cfg := t.factory.CreateDefaultConfig().(*cumulativetodeltaprocessor.Config)
 	if awscontainerinsight.AcceleratedComputeMetricsEnabled(conf) {
 		includeMetrics := []string{
-			"node_neuron_execution_errors*",
-			"node_neuron_execution_status*",
+			"node_neuron_execution_errors_generic",
+			"node_neuron_execution_errors_numerical",
+			"node_neuron_execution_errors_transient",
+			"node_neuron_execution_errors_model",
+			"node_neuron_execution_errors_runtime",
+			"node_neuron_execution_errors_hardware",
+			"node_neuron_execution_status_completed",
+			"node_neuron_execution_status_timed_out",
+			"node_neuron_execution_status_completed_with_err",
+			"node_neuron_execution_status_completed_with_num_err",
+			"node_neuron_execution_status_incorrect_input",
+			"node_neuron_execution_status_failed_to_queue",
+			"node_neuron_execution_errors_total",
+			"container_neurondevice_hw_ecc_events_total",
+			"pod_neurondevice_hw_ecc_events_total",
+			"node_neurondevice_hw_ecc_events_total",
 		}
 		cfg.Include.Metrics = includeMetrics
-		cfg.Include.MatchType = regexp
+		cfg.Include.MatchType = strict
 	}
 
 	//excludeMetrics := t.getExcludeNetAndDiskIOMetrics(conf)
