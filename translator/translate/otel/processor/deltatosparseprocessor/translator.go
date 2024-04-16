@@ -4,12 +4,20 @@
 package deltatosparseprocessor
 
 import (
+	"github.com/aws/amazon-cloudwatch-agent/translator/translate/otel/receiver/awscontainerinsight"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/deltatosparseprocessor"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/confmap"
 	"go.opentelemetry.io/collector/processor"
 
 	"github.com/aws/amazon-cloudwatch-agent/translator/translate/otel/common"
+)
+
+const (
+	// Match types are in internal package from contrib
+	// Strict is the FilterType for filtering by exact string matches.
+	strict = "strict"
+	regexp = "regexp"
 )
 
 type translator struct {
@@ -35,6 +43,23 @@ func (t *translator) ID() component.ID {
 // Metrics section of the JSON config.
 func (t *translator) Translate(conf *confmap.Conf) (component.Config, error) {
 	cfg := t.factory.CreateDefaultConfig().(*deltatosparseprocessor.Config)
-
+	if awscontainerinsight.AcceleratedComputeMetricsEnabled(conf) {
+		includeMetrics := []string{
+			"node_neuron_execution_errors_generic",
+			"node_neuron_execution_errors_numerical",
+			"node_neuron_execution_errors_transient",
+			"node_neuron_execution_errors_model",
+			"node_neuron_execution_errors_runtime",
+			"node_neuron_execution_errors_hardware",
+			"node_neuron_execution_status_completed",
+			"node_neuron_execution_status_timed_out",
+			"node_neuron_execution_status_completed_with_err",
+			"node_neuron_execution_status_completed_with_num_err",
+			"node_neuron_execution_status_incorrect_input",
+			"node_neuron_execution_status_failed_to_queue",
+		}
+		cfg.Include.Metrics = includeMetrics
+		cfg.Include.MatchType = strict
+	}
 	return cfg, nil
 }
