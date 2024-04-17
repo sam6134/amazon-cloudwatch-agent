@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/aws/amazon-cloudwatch-agent/plugins/processors/gpuattributes/internal"
+	"github.com/aws/amazon-cloudwatch-agent/plugins/processors/gpuattributes/internal/metricFilters"
 	"strings"
 
 	"go.opentelemetry.io/collector/pdata/pcommon"
@@ -43,72 +44,6 @@ const (
 //   - ClusterName
 //   - ClusterName, InstanceIdKey, NodeName
 //   - ClusterName, InstanceIdKey, NodeName, GpuDevice
-var containerLabelFilter = map[string]map[string]interface{}{
-	containerinsightscommon.ClusterNameKey:   nil,
-	containerinsightscommon.InstanceIdKey:    nil,
-	containerinsightscommon.GpuDeviceKey:     nil,
-	containerinsightscommon.MetricType:       nil,
-	containerinsightscommon.NodeNameKey:      nil,
-	containerinsightscommon.K8sNamespace:     nil,
-	containerinsightscommon.FullPodNameKey:   nil,
-	containerinsightscommon.PodNameKey:       nil,
-	containerinsightscommon.TypeService:      nil,
-	containerinsightscommon.GpuUniqueId:      nil,
-	containerinsightscommon.ContainerNamekey: nil,
-	containerinsightscommon.InstanceTypeKey:  nil,
-	containerinsightscommon.VersionKey:       nil,
-	containerinsightscommon.SourcesKey:       nil,
-	containerinsightscommon.Timestamp:        nil,
-	containerinsightscommon.K8sKey: {
-		containerinsightscommon.HostKey: nil,
-		"labels":                        nil,
-		"pod_id":                        nil,
-		"pod_name":                      nil,
-		"pod_owners":                    nil,
-		"namespace":                     nil,
-		"container_name":                nil,
-		"containerd":                    nil,
-	},
-}
-var podLabelFilter = map[string]map[string]interface{}{
-	containerinsightscommon.ClusterNameKey:  nil,
-	containerinsightscommon.InstanceIdKey:   nil,
-	containerinsightscommon.GpuDeviceKey:    nil,
-	containerinsightscommon.MetricType:      nil,
-	containerinsightscommon.NodeNameKey:     nil,
-	containerinsightscommon.K8sNamespace:    nil,
-	containerinsightscommon.FullPodNameKey:  nil,
-	containerinsightscommon.PodNameKey:      nil,
-	containerinsightscommon.TypeService:     nil,
-	containerinsightscommon.GpuUniqueId:     nil,
-	containerinsightscommon.InstanceTypeKey: nil,
-	containerinsightscommon.VersionKey:      nil,
-	containerinsightscommon.SourcesKey:      nil,
-	containerinsightscommon.Timestamp:       nil,
-	containerinsightscommon.K8sKey: {
-		containerinsightscommon.HostKey: nil,
-		"labels":                        nil,
-		"pod_id":                        nil,
-		"pod_name":                      nil,
-		"pod_owners":                    nil,
-		"namespace":                     nil,
-	},
-}
-var nodeLabelFilter = map[string]map[string]interface{}{
-	containerinsightscommon.ClusterNameKey:  nil,
-	containerinsightscommon.InstanceIdKey:   nil,
-	containerinsightscommon.GpuDeviceKey:    nil,
-	containerinsightscommon.MetricType:      nil,
-	containerinsightscommon.NodeNameKey:     nil,
-	containerinsightscommon.InstanceTypeKey: nil,
-	containerinsightscommon.VersionKey:      nil,
-	containerinsightscommon.SourcesKey:      nil,
-	containerinsightscommon.Timestamp:       nil,
-	containerinsightscommon.K8sKey: {
-		containerinsightscommon.HostKey: nil,
-	},
-}
-
 type gpuAttributesProcessor struct {
 	*Config
 	logger                          *zap.Logger
@@ -138,13 +73,13 @@ func (d *gpuAttributesProcessor) processMetrics(_ context.Context, md pmetric.Me
 			ils := ilms.At(j)
 			metrics := ils.Metrics()
 
+			// loop over all the original metrics and add aggregated and granular metrics at end of the list
 			metricsLength := metrics.Len()
 			for k := 0; k < metricsLength; k++ {
 				m := metrics.At(k)
 				if strings.Contains(m.Name(), "neuron") || strings.Contains(m.Name(), "Neuron") {
 					isNeuronMetrics = true
 				}
-				d.processGPUMetricAttributes(m)
 				d.awsNeuronMemoryMetricAggregator.AggregateMemoryMetric(m)
 				// non neuron metric is returned as a singleton list
 				d.awsNeuronMetricModifier.ModifyMetric(m, metrics)
@@ -152,6 +87,12 @@ func (d *gpuAttributesProcessor) processMetrics(_ context.Context, md pmetric.Me
 			if d.awsNeuronMemoryMetricAggregator.MemoryMetricsFound {
 				aggregatedMemoryMetric := d.awsNeuronMemoryMetricAggregator.FlushAggregatedMemoryMetric()
 				d.awsNeuronMetricModifier.ModifyMetric(aggregatedMemoryMetric, metrics)
+			}
+
+			//loop over all metrics and filter labels
+			for k := 0; k < metrics.Len(); k++ {
+				m := metrics.At(k)
+				d.processGPUMetricAttributes(m)
 			}
 		}
 	}
@@ -164,17 +105,26 @@ func (d *gpuAttributesProcessor) processMetrics(_ context.Context, md pmetric.Me
 
 func (d *gpuAttributesProcessor) processGPUMetricAttributes(m pmetric.Metric) {
 	// only decorate GPU metrics
-	if !strings.Contains(m.Name(), gpuMetricIdentifier) {
+	isGpuMetric := strings.Contains(m.Name(), gpuMetricIdentifier)
+	isNeuronMetric := d.awsNeuronMetricModifier.IsNeuronMetric(m.Name())
+	if !isNeuronMetric || !isGpuMetric {
 		return
 	}
 
 	labelFilter := map[string]map[string]interface{}{}
-	if strings.HasPrefix(m.Name(), gpuContainerMetricPrefix) {
-		labelFilter = containerLabelFilter
-	} else if strings.HasPrefix(m.Name(), gpuPodMetricPrefix) {
-		labelFilter = podLabelFilter
-	} else if strings.HasPrefix(m.Name(), gpuNodeMetricPrefix) {
-		labelFilter = nodeLabelFilter
+	if isGpuMetric {
+		if strings.HasPrefix(m.Name(), gpuContainerMetricPrefix) {
+			labelFilter = metricFilters.ContainerLabelFilter
+		} else if strings.HasPrefix(m.Name(), gpuPodMetricPrefix) {
+			labelFilter = metricFilters.PodLabelFilter
+		} else if strings.HasPrefix(m.Name(), gpuNodeMetricPrefix) {
+			labelFilter = metricFilters.NodeLabelFilter
+		}
+	} else if isNeuronMetric {
+		labelFilter = metricFilters.CommonNeuronMetricFilter
+		if strings.HasPrefix(m.Name(), "node_neurondevice_") {
+			labelFilter = metricFilters.NodeAWSNeuronDeviceMetricFilter
+		}
 	}
 
 	var dps pmetric.NumberDataPointSlice
