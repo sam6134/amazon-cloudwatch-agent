@@ -110,7 +110,7 @@ func NewMetricModifier(logger *zap.Logger) *AwsNeuronMetricModifier {
 func (md *AwsNeuronMetricModifier) ModifyMetric(originalMetric pmetric.Metric, metrics pmetric.MetricSlice) {
 	// only decorate Aws Neuron metrics
 	// another option is to separate Aws Neuron in its own pipeline to minimize extra processing of metrics
-	if !md.IsNeuronMetric(originalMetric.Name()) {
+	if _, isNeuronMetric := metricModificationsMap[originalMetric.Name()]; !isNeuronMetric {
 		return
 	}
 
@@ -322,7 +322,22 @@ func resetStaleDatapoints(originalMetric pmetric.Metric) {
 	}
 }
 
-func (md *AwsNeuronMetricModifier) IsNeuronMetric(metricName string) bool {
-	_, isNeuronMetric := metricModificationsMap[metricName]
-	return isNeuronMetric
+func (md *AwsNeuronMetricModifier) IsProcessedNeuronMetric(name string) bool {
+	possiblePrefixes := []string{
+		strings.ToLower(containerinsightscommon.TypeContainer) + "_neuroncore_",
+		strings.ToLower(containerinsightscommon.TypePod) + "_neuroncore_",
+		strings.ToLower(containerinsightscommon.TypeNode) + "_neuroncore_",
+		strings.ToLower(containerinsightscommon.TypeContainer) + "_neurondevice_",
+		strings.ToLower(containerinsightscommon.TypePod) + "_neurondevice_",
+		strings.ToLower(containerinsightscommon.TypeNode) + "neurondevice_",
+		strings.ToLower(containerinsightscommon.TypeNode) + "_neuron_",
+	}
+
+	for _, prefix := range possiblePrefixes {
+		if strings.HasPrefix(name, prefix) {
+			return true
+		}
+	}
+
+	return false
 }

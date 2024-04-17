@@ -106,7 +106,7 @@ func (d *gpuAttributesProcessor) processMetrics(_ context.Context, md pmetric.Me
 func (d *gpuAttributesProcessor) processGPUMetricAttributes(m pmetric.Metric) {
 	// only decorate GPU metrics
 	isGpuMetric := strings.Contains(m.Name(), gpuMetricIdentifier)
-	isNeuronMetric := d.awsNeuronMetricModifier.IsNeuronMetric(m.Name())
+	isNeuronMetric := d.awsNeuronMetricModifier.IsProcessedNeuronMetric(m.Name())
 	if !isNeuronMetric || !isGpuMetric {
 		return
 	}
