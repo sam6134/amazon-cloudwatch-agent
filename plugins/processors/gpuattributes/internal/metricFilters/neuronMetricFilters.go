@@ -6,6 +6,7 @@ import (
 )
 
 var CommonNeuronMetricFilter = map[string]map[string]interface{}{
+	internal.ClusterName:      nil,
 	internal.ContainerName:    nil,
 	internal.FullPodName:      nil,
 	internal.InstanceId:       nil,
@@ -30,6 +31,7 @@ var CommonNeuronMetricFilter = map[string]map[string]interface{}{
 	internal.NeuronCore: nil,
 }
 var NodeAWSNeuronDeviceMetricFilter = map[string]map[string]interface{}{
+	internal.ClusterName:      nil,
 	internal.ContainerName:    nil,
 	internal.FullPodName:      nil,
 	internal.InstanceId:       nil,
