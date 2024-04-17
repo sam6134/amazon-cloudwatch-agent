@@ -98,6 +98,15 @@ var (
 			"sram_ecc_corrected":   NeuronDeviceHardwareEccEventsAggregatedMetric,
 			"sram_ecc_uncorrected": NeuronDeviceHardwareEccEventsAggregatedMetric},
 	}
+	possiblePrefixes = []string{
+		"container_neuroncore_",
+		"pod_neuroncore_",
+		"node_neuroncore_",
+		"container_neurondevice_",
+		"pod_neurondevice_",
+		"node_neurondevice_",
+		"node_neuron_",
+	}
 )
 
 func NewMetricModifier(logger *zap.Logger) *AwsNeuronMetricModifier {
@@ -323,18 +332,9 @@ func resetStaleDatapoints(originalMetric pmetric.Metric) {
 }
 
 func (md *AwsNeuronMetricModifier) IsProcessedNeuronMetric(name string) bool {
-	possiblePrefixes := []string{
-		strings.ToLower(containerinsightscommon.TypeContainer) + "_neuroncore_",
-		strings.ToLower(containerinsightscommon.TypePod) + "_neuroncore_",
-		strings.ToLower(containerinsightscommon.TypeNode) + "_neuroncore_",
-		strings.ToLower(containerinsightscommon.TypeContainer) + "_neurondevice_",
-		strings.ToLower(containerinsightscommon.TypePod) + "_neurondevice_",
-		strings.ToLower(containerinsightscommon.TypeNode) + "neurondevice_",
-		strings.ToLower(containerinsightscommon.TypeNode) + "_neuron_",
-	}
-
 	for _, prefix := range possiblePrefixes {
 		if strings.HasPrefix(name, prefix) {
+			md.logger.Info("is a processed neuron metric : " + name)
 			return true
 		}
 	}
