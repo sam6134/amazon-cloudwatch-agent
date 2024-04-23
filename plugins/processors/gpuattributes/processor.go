@@ -7,8 +7,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/aws/amazon-cloudwatch-agent/plugins/processors/gpuattributes/internal"
-	"github.com/aws/amazon-cloudwatch-agent/plugins/processors/gpuattributes/internal/metricFilters"
 	"strings"
 
 	"go.opentelemetry.io/collector/pdata/pcommon"
@@ -16,6 +14,8 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/aws/amazon-cloudwatch-agent/internal/containerinsightscommon"
+    "github.com/aws/amazon-cloudwatch-agent/plugins/processors/gpuattributes/internal"
+	"github.com/aws/amazon-cloudwatch-agent/plugins/processors/gpuattributes/internal/metricFilters"
 )
 
 const (
