@@ -4,11 +4,12 @@
 package deltatosparseprocessor
 
 import (
-	"github.com/aws/amazon-cloudwatch-agent/plugins/processors/deltatosparseprocessor"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/confmap"
+
+	"github.com/aws/amazon-cloudwatch-agent/plugins/processors/deltatosparseprocessor"
 )
 
 func TestTranslator(t *testing.T) {
