@@ -18,8 +18,6 @@ import (
 	"go.opentelemetry.io/collector/processor"
 	"go.opentelemetry.io/collector/processor/processortest"
 	"go.uber.org/zap"
-
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/filter/filterset"
 )
 
 var (
@@ -37,7 +35,7 @@ type testSumMetric struct {
 
 type deltaToSparseTest struct {
 	name       string
-	include    MatchMetrics
+	include    []string
 	inMetrics  pmetric.Metrics
 	outMetrics pmetric.Metrics
 }
@@ -45,14 +43,8 @@ type deltaToSparseTest struct {
 func TestCumulativeToDeltaProcessor(t *testing.T) {
 	testCases := []deltaToSparseTest{
 		{
-			name: "delta_to_sparse_one_positive",
-			include: MatchMetrics{
-				Metrics: []string{"metric_1"},
-				Config: filterset.Config{
-					MatchType:    "strict",
-					RegexpConfig: nil,
-				},
-			},
+			name:    "delta_to_sparse_one_positive",
+			include: []string{"metric_1"},
 			inMetrics: generateTestSumMetrics(testSumMetric{
 				metricNames:  []string{"metric_1", "metric_2"},
 				metricValues: [][]float64{{0, 100, 0, 500}, {0, 4}},
@@ -67,14 +59,8 @@ func TestCumulativeToDeltaProcessor(t *testing.T) {
 			}),
 		},
 		{
-			name: "delta_to_sparse_nan_value",
-			include: MatchMetrics{
-				Metrics: []string{"metric_1"},
-				Config: filterset.Config{
-					MatchType:    "regexp",
-					RegexpConfig: nil,
-				},
-			},
+			name:    "delta_to_sparse_nan_value",
+			include: []string{"metric_1"},
 			inMetrics: generateTestSumMetrics(testSumMetric{
 				metricNames:  []string{"metric_1", "metric_2"},
 				metricValues: [][]float64{{0, 100, 200, math.NaN()}, {4}},
@@ -109,28 +95,6 @@ func TestCumulativeToDeltaProcessor(t *testing.T) {
 					{zeroFlag, zeroFlag, noValueFlag, zeroFlag, zeroFlag},
 					{zeroFlag, zeroFlag, noValueFlag, noValueFlag, zeroFlag},
 				},
-			}),
-		},
-		{
-			name: "delta_to_sparse_all",
-			include: MatchMetrics{
-				Metrics: []string{".*"},
-				Config: filterset.Config{
-					MatchType:    "regexp",
-					RegexpConfig: nil,
-				},
-			},
-			inMetrics: generateTestSumMetrics(testSumMetric{
-				metricNames:  []string{"metric_1", "metric_2"},
-				metricValues: [][]float64{{0, 100, 200, 500}, {0, 4, 5}},
-				isDelta:      []bool{true, true},
-				isMonotonic:  []bool{true, true},
-			}),
-			outMetrics: generateTestSumMetrics(testSumMetric{
-				metricNames:  []string{"metric_1", "metric_2"},
-				metricValues: [][]float64{{100, 200, 500}, {4, 5}},
-				isDelta:      []bool{true, true},
-				isMonotonic:  []bool{true, true},
 			}),
 		},
 	}

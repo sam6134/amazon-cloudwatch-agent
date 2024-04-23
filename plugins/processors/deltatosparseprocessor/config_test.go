@@ -11,13 +11,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/confmap/confmaptest"
-
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/filter/filterset"
 )
 
 func TestUnmarshalDefaultConfig(t *testing.T) {
 	t.Parallel()
-    processorType := "deltatosparse"
+	processorType := component.Type("deltatosparse")
 	tests := []struct {
 		id           component.ID
 		expected     component.Config
@@ -26,43 +24,15 @@ func TestUnmarshalDefaultConfig(t *testing.T) {
 		{
 			id: component.NewIDWithName(processorType, ""),
 			expected: &Config{
-				Include: MatchMetrics{
-					Metrics: []string{
-						"metric1",
-						"metric2",
-					},
-					Config: filterset.Config{
-						MatchType:    "strict",
-						RegexpConfig: nil,
-					},
+				Include: []string{
+					"metric1",
+					"metric2",
 				},
 			},
 		},
 		{
 			id:       component.NewIDWithName(processorType, "empty"),
 			expected: createDefaultConfig(),
-		},
-		{
-			id: component.NewIDWithName(processorType, "regexp"),
-			expected: &Config{
-				Include: MatchMetrics{
-					Metrics: []string{
-						"a*",
-					},
-					Config: filterset.Config{
-						MatchType:    "regexp",
-						RegexpConfig: nil,
-					},
-				},
-			},
-		},
-		{
-			id:           component.NewIDWithName(processorType, "missing_match_type"),
-			errorMessage: "match_type must be set if metrics are supplied",
-		},
-		{
-			id:           component.NewIDWithName(processorType, "missing_name"),
-			errorMessage: "metrics must be supplied if match_type is set",
 		},
 	}
 

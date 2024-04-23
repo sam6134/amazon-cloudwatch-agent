@@ -1,25 +1,7 @@
 deltatosparse:
   include:
-    match_type: strict
     metrics:
       - metric1
       - metric2
 
 deltatosparse/empty:
-
-deltatosparse/missing_match_type:
-  include:
-    metrics:
-      - metric1
-      - metric2
-
-deltatosparse/missing_name:
-  include:
-    match_type: strict
-    metrics:
-
-deltatosparse/regexp:
-  include:
-    match_type: regexp
-    metrics:
-      - a*

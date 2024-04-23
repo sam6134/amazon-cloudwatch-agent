@@ -8,12 +8,10 @@ import (
 
 	"go.opentelemetry.io/collector/pdata/pmetric"
 	"go.uber.org/zap"
-
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/filter/filterset"
 )
 
 type deltaToSparseProcessor struct {
-	includeFS filterset.FilterSet
+	includeMap map[string]struct{}
 	*Config
 	logger *zap.Logger
 }
@@ -23,8 +21,10 @@ func newDeltaToSparseProcessor(config *Config, logger *zap.Logger) *deltaToSpars
 		Config: config,
 		logger: logger,
 	}
-	if len(config.Include.Metrics) > 0 {
-		d.includeFS, _ = filterset.CreateFilterSet(config.Include.Metrics, &config.Include.Config)
+
+	d.includeMap = map[string]struct{}{}
+	for _, metricName := range config.Include {
+		d.includeMap[metricName] = struct{}{}
 	}
 	return d
 }
@@ -56,5 +56,6 @@ func (dtsp *deltaToSparseProcessor) processMetrics(_ context.Context, md pmetric
 }
 
 func (dtsp *deltaToSparseProcessor) shouldConvertMetric(metricName string) bool {
-	return dtsp.includeFS != nil && dtsp.includeFS.Matches(metricName)
+	_, contains := dtsp.includeMap[metricName]
+	return contains
 }

@@ -4,12 +4,12 @@
 package deltatosparseprocessor
 
 import (
-    "github.com/open-telemetry/opentelemetry-collector-contrib/processor/deltatosparseprocessor"
+	"github.com/aws/amazon-cloudwatch-agent/plugins/processors/deltatosparseprocessor"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/confmap"
 	"go.opentelemetry.io/collector/processor"
 
-    "github.com/aws/amazon-cloudwatch-agent/translator/translate/otel/common"
+	"github.com/aws/amazon-cloudwatch-agent/translator/translate/otel/common"
 	"github.com/aws/amazon-cloudwatch-agent/translator/translate/otel/receiver/awscontainerinsight"
 )
 
@@ -58,8 +58,7 @@ func (t *translator) Translate(conf *confmap.Conf) (component.Config, error) {
 			"node_neuron_execution_status_incorrect_input",
 			"node_neuron_execution_status_failed_to_queue",
 		}
-		cfg.Include.Metrics = includeMetrics
-		cfg.Include.MatchType = strict
+		cfg.Include = includeMetrics
 	}
 	return cfg, nil
 }
