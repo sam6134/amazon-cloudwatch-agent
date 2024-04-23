@@ -4,14 +4,11 @@
 package cumulativetodeltaprocessor
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/cumulativetodeltaprocessor"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/confmap"
-
-	"github.com/aws/amazon-cloudwatch-agent/translator/translate/otel/common"
 )
 
 func TestTranslator(t *testing.T) {
@@ -30,7 +27,14 @@ func TestTranslator(t *testing.T) {
 					},
 				},
 			},
-			wantErr: &common.MissingKeyError{ID: cdpTranslator.ID(), JsonKey: fmt.Sprint(diskioKey, " or ", netKey)},
+			want: &cumulativetodeltaprocessor.Config{
+				Include: cumulativetodeltaprocessor.MatchMetrics{Metrics: []string{
+					"node_neuron_execution_*",
+					"container_neurondevice_*",
+					"pod_neurondevice_hw_ecc_events_*",
+					"node_neurondevice_hw_ecc_events_*"}},
+				Exclude: cumulativetodeltaprocessor.MatchMetrics{},
+			},
 		},
 		"GenerateDeltaProcessorConfigWithNet": {
 			input: map[string]interface{}{
@@ -41,7 +45,11 @@ func TestTranslator(t *testing.T) {
 				},
 			},
 			want: &cumulativetodeltaprocessor.Config{
-				Include: cumulativetodeltaprocessor.MatchMetrics{},
+				Include: cumulativetodeltaprocessor.MatchMetrics{Metrics: []string{
+					"node_neuron_execution_*",
+					"container_neurondevice_*",
+					"pod_neurondevice_hw_ecc_events_*",
+					"node_neurondevice_hw_ecc_events_*"}},
 				Exclude: cumulativetodeltaprocessor.MatchMetrics{},
 			},
 		},
@@ -54,7 +62,11 @@ func TestTranslator(t *testing.T) {
 				},
 			},
 			want: &cumulativetodeltaprocessor.Config{
-				Include: cumulativetodeltaprocessor.MatchMetrics{},
+				Include: cumulativetodeltaprocessor.MatchMetrics{Metrics: []string{
+					"node_neuron_execution_*",
+					"container_neurondevice_*",
+					"pod_neurondevice_hw_ecc_events_*",
+					"node_neurondevice_hw_ecc_events_*"}},
 				Exclude: cumulativetodeltaprocessor.MatchMetrics{Metrics: []string{"iops_in_progress", "diskio_iops_in_progress"}},
 			},
 		},
