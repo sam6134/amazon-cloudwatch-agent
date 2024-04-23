@@ -334,7 +334,6 @@ func resetStaleDatapoints(originalMetric pmetric.Metric) {
 func (md *AwsNeuronMetricModifier) IsProcessedNeuronMetric(name string) bool {
 	for _, prefix := range possiblePrefixes {
 		if strings.HasPrefix(name, prefix) {
-			md.logger.Info("is a processed neuron metric : " + name)
 			return true
 		}
 	}

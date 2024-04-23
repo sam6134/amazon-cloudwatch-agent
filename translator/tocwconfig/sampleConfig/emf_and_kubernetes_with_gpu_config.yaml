@@ -687,7 +687,7 @@ processors:
             match_type: regexp
             metrics:
               - node_neuron_execution_*
-              - container_neurondevice_*
+              - container_neurondevice_hw_ecc_events_*
               - pod_neurondevice_hw_ecc_events_*
               - node_neurondevice_hw_ecc_events_*
         initial_value: 0

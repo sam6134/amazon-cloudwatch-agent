@@ -51,7 +51,7 @@ func (t *translator) Translate(conf *confmap.Conf) (component.Config, error) {
 	if awscontainerinsight.EnhancedContainerInsightsEnabled(conf) && awscontainerinsight.AcceleratedComputeMetricsEnabled(conf) {
 		includeMetrics := []string{
 			"node_neuron_execution_*",
-			"container_neurondevice_*",
+			"container_neurondevice_hw_ecc_events_*",
 			"pod_neurondevice_hw_ecc_events_*",
 			"node_neurondevice_hw_ecc_events_*",
 		}

@@ -6,7 +6,6 @@ package gpuattributes
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"strings"
 
 	"go.opentelemetry.io/collector/pdata/pcommon"
@@ -117,7 +116,6 @@ func (d *gpuAttributesProcessor) processGPUMetricAttributes(m pmetric.Metric) {
 		if strings.HasPrefix(m.Name(), "node_neurondevice_") {
 			labelFilter = metricFilters.NodeAWSNeuronDeviceMetricFilter
 		}
-		d.logger.Info(fmt.Sprintf("labelMap for %s : %v", m.Name(), labelFilter))
 	}
 
 	var dps pmetric.NumberDataPointSlice
