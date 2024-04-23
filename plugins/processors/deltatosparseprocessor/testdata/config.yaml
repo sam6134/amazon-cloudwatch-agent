@@ -1,6 +1,5 @@
 deltatosparse:
   include:
-    metrics:
       - metric1
       - metric2
 
