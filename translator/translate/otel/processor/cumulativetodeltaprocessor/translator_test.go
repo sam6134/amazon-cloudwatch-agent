@@ -38,7 +38,7 @@ func TestTranslator(t *testing.T) {
 			want: &cumulativetodeltaprocessor.Config{
 				Include: cumulativetodeltaprocessor.MatchMetrics{Metrics: []string{
 					"node_neuron_execution_*",
-					"container_neurondevice_*",
+					"container_neurondevice_hw_ecc_events_*",
 					"pod_neurondevice_hw_ecc_events_*",
 					"node_neurondevice_hw_ecc_events_*"}},
 				Exclude: cumulativetodeltaprocessor.MatchMetrics{},
@@ -63,7 +63,7 @@ func TestTranslator(t *testing.T) {
 			want: &cumulativetodeltaprocessor.Config{
 				Include: cumulativetodeltaprocessor.MatchMetrics{Metrics: []string{
 					"node_neuron_execution_*",
-					"container_neurondevice_*",
+					"container_neurondevice_hw_ecc_events_*",
 					"pod_neurondevice_hw_ecc_events_*",
 					"node_neurondevice_hw_ecc_events_*"}},
 				Exclude: cumulativetodeltaprocessor.MatchMetrics{},
@@ -88,7 +88,7 @@ func TestTranslator(t *testing.T) {
 			want: &cumulativetodeltaprocessor.Config{
 				Include: cumulativetodeltaprocessor.MatchMetrics{Metrics: []string{
 					"node_neuron_execution_*",
-					"container_neurondevice_*",
+					"container_neurondevice_hw_ecc_events_*",
 					"pod_neurondevice_hw_ecc_events_*",
 					"node_neurondevice_hw_ecc_events_*"}},
 				Exclude: cumulativetodeltaprocessor.MatchMetrics{Metrics: []string{"iops_in_progress", "diskio_iops_in_progress"}},
@@ -153,7 +153,7 @@ func TestTranslator(t *testing.T) {
 			want: &cumulativetodeltaprocessor.Config{
 				Include: cumulativetodeltaprocessor.MatchMetrics{Metrics: []string{
 					"node_neuron_execution_*",
-					"container_neurondevice_*",
+					"container_neurondevice_hw_ecc_events_*",
 					"pod_neurondevice_hw_ecc_events_*",
 					"node_neurondevice_hw_ecc_events_*"}},
 				Exclude: cumulativetodeltaprocessor.MatchMetrics{Metrics: []string{"iops_in_progress", "diskio_iops_in_progress"}},
