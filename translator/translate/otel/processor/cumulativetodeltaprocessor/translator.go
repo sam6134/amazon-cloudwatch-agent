@@ -48,7 +48,7 @@ func (t *translator) ID() component.ID {
 // Metrics section of the JSON config.
 func (t *translator) Translate(conf *confmap.Conf) (component.Config, error) {
 	cfg := t.factory.CreateDefaultConfig().(*cumulativetodeltaprocessor.Config)
-	if awscontainerinsight.AcceleratedComputeMetricsEnabled(conf) {
+	if awscontainerinsight.EnhancedContainerInsightsEnabled(conf) && awscontainerinsight.AcceleratedComputeMetricsEnabled(conf) {
 		includeMetrics := []string{
 			"node_neuron_execution_*",
 			"container_neurondevice_*",
