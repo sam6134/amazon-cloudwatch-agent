@@ -15,11 +15,12 @@ ENV GO111MODULE=${GO111MODULE}
 
 COPY go.mod /go/src/github.com/aws/amazon-cloudwatch-agent/
 COPY go.sum /go/src/github.com/aws/amazon-cloudwatch-agent/
-# RUN go mod download -x
+#RUN go mod download -x
 
+COPY . /go/src/github.com/aws/amazon-cloudwatch-agent/
 COPY build /go/src/github.com/aws/amazon-cloudwatch-agent/build
 
-# RUN make build-for-docker-${TARGETARCH}
+#RUN make build-for-docker-${TARGETARCH}
 
 # Install cert and binaries
 FROM $CERT_IMAGE as cert
@@ -33,7 +34,7 @@ RUN apt-get update &&  \
     rm -rf /var/lib/apt/lists/*
 COPY --from=builder /go/src/github.com/aws/amazon-cloudwatch-agent/build/bin/linux_${TARGETARCH}/ /opt/aws/amazon-cloudwatch-agent/bin
 
-FROM scratch
+FROM ubuntu:latest
 
 COPY --from=cert /tmp /tmp
 COPY --from=cert /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
