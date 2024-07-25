@@ -62,7 +62,6 @@ func newGpuAttributesProcessor(config *Config, logger *zap.Logger) *gpuAttribute
 }
 
 func (d *gpuAttributesProcessor) processMetrics(_ context.Context, md pmetric.Metrics) (pmetric.Metrics, error) {
-	isNeuronMetrics := false
 	originalMd := pmetric.NewMetrics()
 	md.CopyTo(originalMd)
 	rms := md.ResourceMetrics()
@@ -78,9 +77,6 @@ func (d *gpuAttributesProcessor) processMetrics(_ context.Context, md pmetric.Me
 			metricsLength := metrics.Len()
 			for k := 0; k < metricsLength; k++ {
 				m := metrics.At(k)
-				if strings.Contains(m.Name(), "neuron") || strings.Contains(m.Name(), "Neuron") {
-					isNeuronMetrics = true
-				}
 				d.awsNeuronMemoryMetricAggregator.AggregateMemoryMetric(m)
 				// non neuron metric is returned as a singleton list
 				d.awsNeuronMetricModifier.ModifyMetric(m, metrics)
@@ -99,9 +95,7 @@ func (d *gpuAttributesProcessor) processMetrics(_ context.Context, md pmetric.Me
 
 		dropResourceMetricAttributes(rs)
 	}
-	if isNeuronMetrics {
-		d.logMd(originalMd, "GPU_Processor_Neuron_Before")
-	}
+	d.logMd(originalMd, "GPU_Processor_Neuron_Before")
 	d.logMd(md, "GPU_Processor_Neuron_After")
 	return md, nil
 }
