@@ -229,7 +229,6 @@ func (md *AwsNeuronMetricModifier) extractDatapointsAsMetricsAndAggregate(origin
 
 	// Creating body for the aggregated metric and add it to the new newMetricSlice for each runtime
 	for aggregatedMetricMetadata, value := range aggregatedValuesPerRuntimeTag {
-		// Aggregated metric for neuron device ecc events is not required
 		aggregatedMetric := setMetricMetadata(newMetricSlice.AppendEmpty(), aggregatedMetricMetadata.aggregatedMetricName, originalMetric.Unit())
 
 		originalMetricDatapoints.At(0).CopyTo(aggregatedMetric.SetEmptySum().DataPoints().AppendEmpty())
