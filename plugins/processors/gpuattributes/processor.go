@@ -101,8 +101,8 @@ func (d *gpuAttributesProcessor) processMetrics(_ context.Context, md pmetric.Me
 	}
 	if isNeuronMetrics {
 		d.logMd(originalMd, "GPU_Processor_Neuron_Before")
-		d.logMd(md, "GPU_Processor_Neuron_After")
 	}
+	d.logMd(md, "GPU_Processor_Neuron_After")
 	return md, nil
 }
 
