@@ -121,7 +121,7 @@ func (md *AwsNeuronMetricModifier) ModifyMetric(originalMetric pmetric.Metric, m
 	}
 	// Neuron metrics sent by the neuron monitor don't have any units so we add them in the agent.
 	addUnit(originalMetric)
-	prefixCoreAndDeviceLabels(originalMetric)
+	updateCoreDeviceRuntimeLabels(originalMetric)
 	resetStaleDatapoints(originalMetric)
 
 	originalMetricName := originalMetric.Name()
@@ -248,7 +248,7 @@ func (md *AwsNeuronMetricModifier) extractDatapointsAsMetricsAndAggregate(origin
 
 // This method prefixes NeuronCore and NeuronDevice values with `core` and `device` respectively
 // to make the attribute values more verbose
-func prefixCoreAndDeviceLabels(originalMetric pmetric.Metric) {
+func updateCoreDeviceRuntimeLabels(originalMetric pmetric.Metric) {
 	dps := originalMetric.Sum().DataPoints()
 	for i := 0; i < dps.Len(); i++ {
 		dp := dps.At(i)
@@ -257,6 +257,7 @@ func prefixCoreAndDeviceLabels(originalMetric pmetric.Metric) {
 				dp.Attributes().PutStr(attributeKey, attributeValuePrefix+value.Str())
 			}
 		}
+		dp.Attributes().PutStr(RuntimeTag, "DEFAULT")
 	}
 }
 
