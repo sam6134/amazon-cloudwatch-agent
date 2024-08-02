@@ -6,12 +6,12 @@ package gpuattributes
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"strings"
 
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/pmetric"
 	"go.uber.org/zap"
+	"golang.org/x/exp/maps"
 
 	"github.com/aws/amazon-cloudwatch-agent/internal/containerinsightscommon"
 	"github.com/aws/amazon-cloudwatch-agent/plugins/processors/gpuattributes/internal"
@@ -49,6 +49,7 @@ type gpuAttributesProcessor struct {
 	logger                          *zap.Logger
 	awsNeuronMetricModifier         *internal.AwsNeuronMetricModifier
 	awsNeuronMemoryMetricAggregator *internal.AwsNeuronMemoryMetricsAggregator
+	awsNeuronMetricChecker          *internal.AwsNeuronMetricChecker
 }
 
 func newGpuAttributesProcessor(config *Config, logger *zap.Logger) *gpuAttributesProcessor {
@@ -57,14 +58,12 @@ func newGpuAttributesProcessor(config *Config, logger *zap.Logger) *gpuAttribute
 		logger:                          logger,
 		awsNeuronMetricModifier:         internal.NewMetricModifier(logger),
 		awsNeuronMemoryMetricAggregator: internal.NewMemoryMemoryAggregator(),
+		awsNeuronMetricChecker:          internal.NewAwsNeuronMetricChecker(),
 	}
 	return d
 }
 
 func (d *gpuAttributesProcessor) processMetrics(_ context.Context, md pmetric.Metrics) (pmetric.Metrics, error) {
-	isNeuronMetrics := false
-	originalMd := pmetric.NewMetrics()
-	md.CopyTo(originalMd)
 	rms := md.ResourceMetrics()
 	for i := 0; i < rms.Len(); i++ {
 		rs := rms.At(i)
@@ -78,9 +77,6 @@ func (d *gpuAttributesProcessor) processMetrics(_ context.Context, md pmetric.Me
 			metricsLength := metrics.Len()
 			for k := 0; k < metricsLength; k++ {
 				m := metrics.At(k)
-				if strings.Contains(m.Name(), "neuron") || strings.Contains(m.Name(), "Neuron") {
-					isNeuronMetrics = true
-				}
 				d.awsNeuronMemoryMetricAggregator.AggregateMemoryMetric(m)
 				// non neuron metric is returned as a singleton list
 				d.awsNeuronMetricModifier.ModifyMetric(m, metrics)
@@ -99,17 +95,13 @@ func (d *gpuAttributesProcessor) processMetrics(_ context.Context, md pmetric.Me
 
 		dropResourceMetricAttributes(rs)
 	}
-	if isNeuronMetrics {
-		d.logMd(originalMd, "GPU_Processor_Neuron_Before")
-		d.logMd(md, "GPU_Processor_Neuron_After")
-	}
 	return md, nil
 }
 
 func (d *gpuAttributesProcessor) processMetricAttributes(m pmetric.Metric) {
 	// only decorate GPU metrics
 	isGpuMetric := strings.Contains(m.Name(), gpuMetricIdentifier)
-	isNeuronMetric := d.awsNeuronMetricModifier.IsProcessedNeuronMetric(m.Name())
+	isNeuronMetric := d.awsNeuronMetricChecker.IsProcessedNeuronMetric(m.Name())
 	if !isNeuronMetric && !isGpuMetric {
 		return
 	}
@@ -117,23 +109,29 @@ func (d *gpuAttributesProcessor) processMetricAttributes(m pmetric.Metric) {
 	labelFilter := map[string]map[string]interface{}{}
 	if isGpuMetric {
 		if strings.HasPrefix(m.Name(), containerMetricPrefix) {
-			labelFilter = metricFilters.ContainerLabelFilter
+			labelFilter = metricFilters.ContainerGpuLabelFilter
 		} else if strings.HasPrefix(m.Name(), podMetricPrefix) {
-			labelFilter = metricFilters.PodLabelFilter
+			labelFilter = metricFilters.PodGpuLabelFilter
 		} else if strings.HasPrefix(m.Name(), nodeMetricPrefix) {
-			labelFilter = metricFilters.NodeLabelFilter
+			labelFilter = metricFilters.NodeGpuLabelFilter
 		}
 	} else if isNeuronMetric {
 		if strings.HasPrefix(m.Name(), containerMetricPrefix) {
-			labelFilter = metricFilters.ContainerNeuronMetricFilter
+			labelFilter = metricFilters.ContainerNeuronLabelFilter
 		} else if strings.HasPrefix(m.Name(), podMetricPrefix) {
-			labelFilter = metricFilters.PodNeuronMetricFilter
+			labelFilter = metricFilters.PodNeuronLabelFilter
 		} else if strings.HasPrefix(m.Name(), nodeMetricPrefix) {
-			labelFilter = metricFilters.NodeNeuronMetricFilter
+			labelFilter = metricFilters.NodeNeuronLabelFilter
 		}
 
 		if strings.Contains(m.Name(), "_neurondevice_hw") {
-			delete(labelFilter[internal.Kubernetes], "labels")
+			if kubernetesMap, ok := labelFilter[internal.Kubernetes]; ok {
+				// cloning is done to avoid modifying the original label filters
+				labelFilter = maps.Clone(labelFilter)
+				kubernetesMap := maps.Clone(kubernetesMap)
+				delete(kubernetesMap, "labels")
+				labelFilter[internal.Kubernetes] = kubernetesMap
+			}
 		}
 	}
 
@@ -231,60 +229,4 @@ func dropResourceMetricAttributes(resourceMetric pmetric.ResourceMetrics) {
 	if exists && (serviceName.Str() == "containerInsightsNeuronMonitorScraper" || serviceName.Str() == "containerInsightsDCGMExporterScraper") {
 		resourceMetric.Resource().Attributes().Clear()
 	}
-}
-
-func (d *gpuAttributesProcessor) logMd(md pmetric.Metrics, name string) {
-	var logMessage strings.Builder
-
-	logMessage.WriteString(fmt.Sprintf("\"%s_METRICS_MD\" : {\n", name))
-	rms := md.ResourceMetrics()
-	for i := 0; i < rms.Len(); i++ {
-		rs := rms.At(i)
-		rs.Resource().Attributes().AsRaw()
-		ilms := rs.ScopeMetrics()
-		logMessage.WriteString(fmt.Sprintf("\t\"ResourceMetric_%d\": {\n", i))
-		logMessage.WriteString(fmt.Sprintf("\t\t\"Resource attributes\": %s,\n", rs.Resource().Attributes().AsRaw()))
-		for j := 0; j < ilms.Len(); j++ {
-			ils := ilms.At(j)
-			metrics := ils.Metrics()
-			logMessage.WriteString(fmt.Sprintf("\t\t\"ScopeMetric_%d\": {\n", j))
-			logMessage.WriteString(fmt.Sprintf("\t\t\"Metrics_%d\": [\n", j))
-
-			for k := 0; k < metrics.Len(); k++ {
-				m := metrics.At(k)
-				logMessage.WriteString(fmt.Sprintf("\t\t\t\"Metric_%d\": {\n", k))
-				logMessage.WriteString(fmt.Sprintf("\t\t\t\t\"name\": \"%s\",\n", m.Name()))
-				logMessage.WriteString(fmt.Sprintf("\t\t\t\t\"type\": \"%s\",\n", m.Type()))
-
-				var datapoints pmetric.NumberDataPointSlice
-				switch m.Type() {
-				case pmetric.MetricTypeGauge:
-					datapoints = m.Gauge().DataPoints()
-				case pmetric.MetricTypeSum:
-					datapoints = m.Sum().DataPoints()
-				default:
-					datapoints = pmetric.NewNumberDataPointSlice()
-				}
-
-				logMessage.WriteString("\t\t\t\t\"datapoints\": [\n")
-				for yu := 0; yu < datapoints.Len(); yu++ {
-					logMessage.WriteString("\t\t\t\t\t{\n")
-					logMessage.WriteString(fmt.Sprintf("\t\t\t\t\t\t\"attributes\": \"%v\",\n", datapoints.At(yu).Attributes().AsRaw()))
-					logMessage.WriteString(fmt.Sprintf("\t\t\t\t\t\t\"value\": %v,\n", datapoints.At(yu).DoubleValue()))
-					logMessage.WriteString(fmt.Sprintf("\t\t\t\t\t\t\"timestamp\": %v,\n", datapoints.At(yu).Timestamp()))
-					logMessage.WriteString(fmt.Sprintf("\t\t\t\t\t\t\"flags\": %v,\n", datapoints.At(yu).Flags()))
-					logMessage.WriteString(fmt.Sprintf("\t\t\t\t\t\t\"value type\": %v,\n", datapoints.At(yu).ValueType()))
-					logMessage.WriteString("\t\t\t\t\t},\n")
-				}
-				logMessage.WriteString("\t\t\t\t],\n")
-				logMessage.WriteString("\t\t\t},\n")
-			}
-			logMessage.WriteString("\t\t],\n")
-			logMessage.WriteString("\t\t},\n")
-		}
-		logMessage.WriteString("\t},\n")
-	}
-	logMessage.WriteString("},\n")
-
-	d.logger.Info(logMessage.String())
 }
